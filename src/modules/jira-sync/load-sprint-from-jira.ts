@@ -40,7 +40,9 @@ export async function loadSprintFromJira(input: {
 }): Promise<LoadSprintFromJiraResult> {
   const config = getJiraClientConfigFromEnv()
   const client = new JiraClient(config)
-  const storyPointsFieldId = process.env.JIRA_STORY_POINTS_FIELD?.trim() || undefined
+  /** Team-managed costuma usar customfield_10016; sobrescreva com JIRA_STORY_POINTS_FIELD se for diferente. */
+  const storyPointsFieldId =
+    process.env.JIRA_STORY_POINTS_FIELD?.trim() || 'customfield_10016'
   const sprintId = input.sprintId.trim()
 
   const metaRes = await client.jiraFetch(
