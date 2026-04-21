@@ -383,7 +383,7 @@ E reforço novamente a exigência principal:
 Comandos de validação: `npm run build`, `npm run test`, `npm run lint`.
 
 - [x] **01 — Fundação Next.js**: App Router, Tailwind (PostCSS), pastas `modules/*`, `infra/mongodb`, `shared`, `GET /api/health`, testes Vitest, build verde.
-- [ ] **02 — Infra MongoDB**: driver, helper de conexão, variáveis de ambiente, testes com mock ou memória.
+- [x] **02 — Infra MongoDB**: driver, helper de conexão, variáveis de ambiente, testes com mock ou memória.
 - [ ] **03 — Cliente Jira**: tipos de domínio, cliente HTTP configurável, sem chamadas reais nos testes unitários.
 - [ ] **04 — Rota de sync**: `POST /api/sync/sprint` com contrato inicial, persistência de snapshot e registro de execução.
 - [ ] **05 — Modelagem e repositórios**: collections sprint/issues/métricas conforme plano.
