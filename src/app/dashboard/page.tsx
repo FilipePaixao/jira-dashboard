@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { SprintVisualizations } from '@/components/dashboard/SprintVisualizations'
 
 type DashboardResponse = {
   snapshot: {
@@ -232,9 +233,16 @@ export default function DashboardPage() {
                 <Metric label="Escopo adicionado na sprint" value={data.metrics.scopeAddedDuringSprint} />
               </div>
 
-              <div className="mt-6">
+              <div className="mt-8 border-t border-slate-100 pt-8 dark:border-slate-800">
+                <h3 className="mb-4 text-base font-semibold text-slate-900 dark:text-slate-100">
+                  Visão gráfica
+                </h3>
+                <SprintVisualizations metrics={data.metrics} />
+              </div>
+
+              <div className="mt-8">
                 <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                  Por pessoa (contextualizado)
+                  Detalhe por pessoa
                 </h3>
                 <ul className="mt-2 space-y-2 text-sm">
                   {Object.entries(data.metrics.byAssignee).map(([name, v]) => (
