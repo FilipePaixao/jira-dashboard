@@ -29,14 +29,61 @@ type DashboardResponse = {
 
 export default function DashboardPage() {
   const [sprintId, setSprintId] = useState('')
+  const [sprintNameOverride, setSprintNameOverride] = useState('')
   const [loading, setLoading] = useState(false)
+  const [syncing, setSyncing] = useState(false)
+  const [syncMessage, setSyncMessage] = useState<string | null>(null)
   const [data, setData] = useState<DashboardResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  async function load() {
+  async function runSync() {
     const id = sprintId.trim()
     if (!id) {
-      setError('Informe o ID da sprint')
+      setSyncMessage(null)
+      setError('Informe o ID da sprint (número da sprint no Jira Agile)')
+      return
+    }
+    setSyncing(true)
+    setSyncMessage(null)
+    setError(null)
+    try {
+      const res = await fetch('/api/sync/sprint', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sprintId: id,
+          sprintName: sprintNameOverride.trim() || undefined,
+        }),
+      })
+      const json = (await res.json()) as {
+        ok?: boolean
+        issuesFetched?: number
+        error?: string
+        phase?: string
+      }
+      if (!res.ok) {
+        setSyncMessage(null)
+        setError(json.error ?? `Sync falhou (${res.status})`)
+        return
+      }
+      setSyncMessage(
+        `Sincronizado: ${json.issuesFetched ?? 0} issues (${json.phase ?? 'live'}). Pode carregar o dashboard abaixo.`,
+      )
+      await load({ skipValidation: true })
+    } catch {
+      setSyncMessage(null)
+      setError('Não foi possível conectar ao servidor para sincronizar')
+    } finally {
+      setSyncing(false)
+    }
+  }
+
+  async function load(opts?: { skipValidation?: boolean }) {
+    const id = sprintId.trim()
+    if (!id) {
+      if (!opts?.skipValidation) {
+        setError('Informe o ID da sprint')
+      }
       return
     }
     setLoading(true)
@@ -62,8 +109,47 @@ export default function DashboardPage() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Dashboard da sprint</h1>
         <p className="mt-1 text-slate-600 dark:text-slate-400">
-          Dados lidos apenas do backend (MongoDB). Informe o mesmo sprintId usado na sincronização.
+          Primeiro sincronize a sprint a partir do Jira (credenciais no servidor). Depois carregue as
+          métricas — tudo via API interna.
         </p>
+      </div>
+
+      <section className="rounded-xl border border-indigo-200 bg-indigo-50/80 p-4 dark:border-indigo-900 dark:bg-indigo-950/30">
+        <h2 className="text-sm font-semibold text-indigo-900 dark:text-indigo-100">
+          1. Sincronizar do Jira
+        </h2>
+        <p className="mt-1 text-xs text-indigo-800/90 dark:text-indigo-200/90">
+          Use o ID numérico da sprint (Agile), o mesmo que aparece na URL do backlog ou relatório de
+          sprint.
+        </p>
+        <div className="mt-3 flex flex-wrap items-end gap-3">
+          <label className="flex flex-col gap-1 text-sm">
+            <span className="font-medium text-slate-700 dark:text-slate-300">Nome (opcional)</span>
+            <input
+              className="min-w-[200px] rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+              value={sprintNameOverride}
+              onChange={(e) => setSprintNameOverride(e.target.value)}
+              placeholder="sobrescrever nome vindo do Jira"
+            />
+          </label>
+          <button
+            type="button"
+            className="rounded-lg bg-indigo-700 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-600 disabled:opacity-50"
+            onClick={() => void runSync()}
+            disabled={syncing || loading}
+          >
+            {syncing ? 'Sincronizando…' : 'Sincronizar agora'}
+          </button>
+        </div>
+        {syncMessage ? (
+          <p className="mt-3 text-sm text-green-800 dark:text-green-200">{syncMessage}</p>
+        ) : null}
+      </section>
+
+      <div>
+        <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+          2. Carregar métricas
+        </h2>
       </div>
 
       <div className="flex flex-wrap items-end gap-3">

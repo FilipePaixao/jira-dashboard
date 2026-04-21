@@ -1,6 +1,7 @@
 import { calculateSprintMetrics } from '@/modules/metrics/calculate-sprint-metrics'
 import { saveSprintMetrics } from '@/modules/metrics/repository'
 import { getMongoDb } from '@/infra/mongodb/client'
+import { loadSprintFromJira } from '@/modules/jira-sync/load-sprint-from-jira'
 import type { SprintSnapshotDocument } from './models'
 import { saveSprintSnapshot } from './repository'
 
@@ -18,7 +19,7 @@ export type SyncSprintResult = {
   boardId: string | null
   syncedAt: string
   issuesFetched: number
-  phase: 'stub'
+  phase: 'live'
 }
 
 export async function syncSprintSnapshot(input: SyncSprintInput): Promise<SyncSprintResult> {
@@ -28,26 +29,32 @@ export async function syncSprintSnapshot(input: SyncSprintInput): Promise<SyncSp
   }
 
   const boardId = input.boardId?.trim() || null
-  const sprintName = input.sprintName?.trim() || sprintId
   const syncedAt = new Date().toISOString()
+
+  const loaded = await loadSprintFromJira({
+    sprintId,
+    sprintName: input.sprintName,
+  })
+
+  const extractionStatus = loaded.issues.length > 0 ? 'complete' : 'partial'
 
   const db = await getMongoDb()
   await db.collection(SYNC_RUNS_COLLECTION).insertOne({
     sprintId,
     boardId,
     syncedAt,
-    issuesFetched: 0,
-    phase: 'stub',
+    issuesFetched: loaded.issues.length,
+    phase: 'live',
     createdAt: syncedAt,
   })
 
   const snapshotDoc: SprintSnapshotDocument = {
     sprintId,
     boardId,
-    sprintName,
+    sprintName: loaded.sprintName,
     syncedAt,
-    issues: [],
-    extractionStatus: 'pending',
+    issues: loaded.issues,
+    extractionStatus,
   }
 
   await saveSprintSnapshot(snapshotDoc)
@@ -59,7 +66,7 @@ export async function syncSprintSnapshot(input: SyncSprintInput): Promise<SyncSp
     sprintId,
     boardId,
     syncedAt,
-    issuesFetched: 0,
-    phase: 'stub',
+    issuesFetched: loaded.issues.length,
+    phase: 'live',
   }
 }
