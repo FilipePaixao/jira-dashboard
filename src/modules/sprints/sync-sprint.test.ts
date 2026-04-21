@@ -28,6 +28,6 @@ describe('syncSprintSnapshot', () => {
     expect(result.issuesFetched).toBe(0)
     expect(result.phase).toBe('stub')
     expect(insertOne).toHaveBeenCalledTimes(1)
-    expect(replaceOne).toHaveBeenCalledTimes(1)
+    expect(replaceOne).toHaveBeenCalledTimes(2)
   })
 })

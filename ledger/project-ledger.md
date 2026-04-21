@@ -7,10 +7,11 @@
 | 2026-04-21 | 03    | Concluída | Incremento 04 — rota de sync         |
 | 2026-04-21 | 04    | Concluída | Incremento 05 — modelagem MongoDB    |
 | 2026-04-21 | 05    | Concluída | Incremento 06 — métricas            |
+| 2026-04-21 | 06    | Concluída | Incremento 07 — API dashboard      |
 
 ## Pendências atuais
 
-- Cálculo e persistência de métricas (incremento 06).
+- API de leitura para o dashboard (incremento 07).
 
 ## Riscos
 

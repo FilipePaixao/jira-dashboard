@@ -1,4 +1,7 @@
+import { calculateSprintMetrics } from '@/modules/metrics/calculate-sprint-metrics'
+import { saveSprintMetrics } from '@/modules/metrics/repository'
 import { getMongoDb } from '@/infra/mongodb/client'
+import type { SprintSnapshotDocument } from './models'
 import { saveSprintSnapshot } from './repository'
 
 export const SYNC_RUNS_COLLECTION = 'sync_runs'
@@ -38,14 +41,18 @@ export async function syncSprintSnapshot(input: SyncSprintInput): Promise<SyncSp
     createdAt: syncedAt,
   })
 
-  await saveSprintSnapshot({
+  const snapshotDoc: SprintSnapshotDocument = {
     sprintId,
     boardId,
     sprintName,
     syncedAt,
     issues: [],
     extractionStatus: 'pending',
-  })
+  }
+
+  await saveSprintSnapshot(snapshotDoc)
+  const metrics = calculateSprintMetrics(snapshotDoc)
+  await saveSprintMetrics(metrics)
 
   return {
     ok: true,
