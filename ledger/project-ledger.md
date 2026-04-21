@@ -5,10 +5,11 @@
 | 2026-04-21 | 01    | Concluída | Incremento 02 — infra MongoDB        |
 | 2026-04-21 | 02    | Concluída | Incremento 03 — cliente Jira         |
 | 2026-04-21 | 03    | Concluída | Incremento 04 — rota de sync         |
+| 2026-04-21 | 04    | Concluída | Incremento 05 — modelagem MongoDB    |
 
 ## Pendências atuais
 
-- Rota `POST /api/sync/sprint` e persistência de snapshot (incremento 04).
+- Modelagem de collections e repositórios (incremento 05).
 
 ## Riscos
 
