@@ -386,7 +386,7 @@ Comandos de validação: `npm run build`, `npm run test`, `npm run lint`.
 - [x] **02 — Infra MongoDB**: driver, helper de conexão, variáveis de ambiente, testes com mock ou memória.
 - [x] **03 — Cliente Jira**: tipos de domínio, cliente HTTP configurável, sem chamadas reais nos testes unitários.
 - [x] **04 — Rota de sync**: `POST /api/sync/sprint` com contrato inicial, persistência de snapshot e registro de execução.
-- [ ] **05 — Modelagem e repositórios**: collections sprint/issues/métricas conforme plano.
+- [x] **05 — Modelagem e repositórios**: collections sprint/issues/métricas conforme plano.
 - [ ] **06 — Métricas**: cálculos (velocidade, lead/cycle time, throughput, spillover, etc.).
 - [ ] **07 — API do dashboard**: leitura consolidada a partir do MongoDB.
 - [ ] **08 — Dashboard UI**: página gerencial responsiva consumindo apenas a API interna.

@@ -6,10 +6,11 @@
 | 2026-04-21 | 02    | Concluída | Incremento 03 — cliente Jira         |
 | 2026-04-21 | 03    | Concluída | Incremento 04 — rota de sync         |
 | 2026-04-21 | 04    | Concluída | Incremento 05 — modelagem MongoDB    |
+| 2026-04-21 | 05    | Concluída | Incremento 06 — métricas            |
 
 ## Pendências atuais
 
-- Modelagem de collections e repositórios (incremento 05).
+- Cálculo e persistência de métricas (incremento 06).
 
 ## Riscos
 

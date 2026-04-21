@@ -1,10 +1,12 @@
 import { getMongoDb } from '@/infra/mongodb/client'
+import { saveSprintSnapshot } from './repository'
 
 export const SYNC_RUNS_COLLECTION = 'sync_runs'
 
 export type SyncSprintInput = {
   sprintId: string
   boardId?: string
+  sprintName?: string
 }
 
 export type SyncSprintResult = {
@@ -23,6 +25,7 @@ export async function syncSprintSnapshot(input: SyncSprintInput): Promise<SyncSp
   }
 
   const boardId = input.boardId?.trim() || null
+  const sprintName = input.sprintName?.trim() || sprintId
   const syncedAt = new Date().toISOString()
 
   const db = await getMongoDb()
@@ -33,6 +36,15 @@ export async function syncSprintSnapshot(input: SyncSprintInput): Promise<SyncSp
     issuesFetched: 0,
     phase: 'stub',
     createdAt: syncedAt,
+  })
+
+  await saveSprintSnapshot({
+    sprintId,
+    boardId,
+    sprintName,
+    syncedAt,
+    issues: [],
+    extractionStatus: 'pending',
   })
 
   return {
