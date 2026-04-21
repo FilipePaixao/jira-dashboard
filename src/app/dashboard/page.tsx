@@ -159,7 +159,7 @@ export default function DashboardPage() {
             className="min-w-[240px] rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             value={sprintId}
             onChange={(e) => setSprintId(e.target.value)}
-            placeholder="ex.: 42 ou chave interna"
+            placeholder="ex.: 104 (id Agile da sprint)"
           />
         </label>
         <button
