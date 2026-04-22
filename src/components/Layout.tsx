@@ -7,9 +7,9 @@ type LayoutProps = {
 
 export function Layout({ children }: LayoutProps) {
   return (
-    <div className="min-h-svh flex flex-col bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+    <div className="mesh-page-bg flex min-h-svh flex-col bg-white text-neutral-900 dark:bg-[#121212] dark:text-white">
       <Header />
-      <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8">{children}</main>
+      <main className="mx-auto w-full max-w-5xl flex-1 px-5 py-8 sm:px-8 lg:px-10">{children}</main>
     </div>
   )
 }

@@ -36,6 +36,11 @@ export type JiraIssueSnapshot = {
   workStartedAt?: string | null
   resolvedAt?: string | null
   storyPoints?: number | null
+  /**
+   * Soma de story points de subtasks associadas à issue principal que não vieram
+   * como itens independentes no recorte da sprint.
+   */
+  subtaskStoryPoints?: number | null
   labels: string[]
   components: string[]
   epicKey?: string | null

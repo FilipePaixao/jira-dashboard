@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
+import { buildExecutiveSummary } from '@/modules/metrics/executive-summary'
 import { getSprintMetricsBySprintId } from '@/modules/metrics/repository'
+import { summarizeDeliveredMetadata } from '@/modules/metrics/snapshot-metadata-summary'
 import { getSprintSnapshotBySprintId } from '@/modules/sprints/repository'
 
 const DISCLAIMER =
@@ -21,9 +23,34 @@ export async function GET(
     return NextResponse.json({ error: 'Sprint não encontrada' }, { status: 404 })
   }
 
+  const executiveSummary =
+    snapshot || metrics
+      ? buildExecutiveSummary(
+          snapshot?.sprintName ?? `Sprint ${sprintId}`,
+          metrics,
+          snapshot?.extractionStatus ?? 'unknown',
+        )
+      : null
+
+  const metadataSummary =
+    snapshot?.issues?.length ? summarizeDeliveredMetadata(snapshot.issues) : null
+
+  const snapshotPublic = snapshot
+    ? {
+        sprintId: snapshot.sprintId,
+        boardId: snapshot.boardId,
+        sprintName: snapshot.sprintName,
+        syncedAt: snapshot.syncedAt,
+        extractionStatus: snapshot.extractionStatus,
+        issueCount: snapshot.issues.length,
+      }
+    : null
+
   return NextResponse.json({
-    snapshot,
+    snapshot: snapshotPublic,
     metrics,
+    metadataSummary,
+    executiveSummary,
     disclaimer: DISCLAIMER,
   })
 }

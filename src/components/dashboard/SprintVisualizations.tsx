@@ -1,19 +1,9 @@
 'use client'
 
 import { useMemo, type ReactNode } from 'react'
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Legend,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts'
+import { D3ColumnChart, type D3ColumnDatum } from '@/components/charts/d3/d3-column-chart'
+import { D3DonutChart, type D3DonutSlice } from '@/components/charts/d3/d3-donut-chart'
+import { D3HorizontalBarChart, type D3HBarRow } from '@/components/charts/d3/d3-horizontal-bars'
 
 type Metrics = {
   velocityStoryPoints: number
@@ -42,9 +32,6 @@ const PALETTE = [
   '#64748b',
 ]
 
-const CHART_AXIS = '#94a3b8'
-const CHART_GRID = 'rgba(148, 163, 184, 0.25)'
-
 type Props = {
   metrics: Metrics
 }
@@ -53,7 +40,7 @@ export function SprintVisualizations({ metrics }: Props) {
   const byPerson = useMemo(() => {
     return Object.entries(metrics.byAssignee)
       .map(([name, v]) => ({
-        nome: truncateLabel(name, 22),
+        nome: truncateLabel(name, 28),
         nomeCompleto: name,
         pontos: v.storyPoints,
         issues: v.issues,
@@ -61,23 +48,59 @@ export function SprintVisualizations({ metrics }: Props) {
       .sort((a, b) => b.pontos - a.pontos || b.issues - a.issues)
   }, [metrics.byAssignee])
 
-  const donutData = useMemo(() => {
+  const ptsRows: D3HBarRow[] = useMemo(
+    () =>
+      byPerson.map((p, i) => ({
+        yLabel: p.nome,
+        value: p.pontos,
+        fullName: p.nomeCompleto,
+        detail: `${p.pontos} story points`,
+        color: PALETTE[i % PALETTE.length]!,
+      })),
+    [byPerson],
+  )
+
+  const issuesRows: D3HBarRow[] = useMemo(
+    () =>
+      byPerson.map((p) => ({
+        yLabel: p.nome,
+        value: p.issues,
+        fullName: p.nomeCompleto,
+        detail: `${p.issues} issues entregues`,
+        color: '#06b6d4',
+      })),
+    [byPerson],
+  )
+
+  const donutData: D3DonutSlice[] = useMemo(() => {
     const rows = Object.entries(metrics.byAssignee)
       .filter(([, v]) => v.storyPoints > 0)
-      .map(([name, v]) => ({ name: truncateLabel(name, 18), value: v.storyPoints, full: name }))
+      .map(([name, v], i) => ({
+        name: truncateLabel(name, 18),
+        value: v.storyPoints,
+        full: name,
+        color: PALETTE[i % PALETTE.length]!,
+      }))
     const sum = rows.reduce((s, r) => s + r.value, 0)
     if (sum === 0 && metrics.storyPointsDelivered > 0) {
-      return [{ name: 'Sem atribuição', value: metrics.storyPointsDelivered, full: 'Sem atribuição' }]
+      return [
+        {
+          name: 'Sem atribuição',
+          value: metrics.storyPointsDelivered,
+          full: 'Sem atribuição',
+          color: PALETTE[0]!,
+        },
+      ]
     }
     return rows
   }, [metrics.byAssignee, metrics.storyPointsDelivered])
 
-  const comparisonBars = useMemo(
+  const comparisonBars: D3ColumnDatum[] = useMemo(
     () => [
-      { rotulo: 'Committed', valor: metrics.committedCount, fill: '#818cf8' },
-      { rotulo: 'Entregues', valor: metrics.deliveredCount, fill: '#34d399' },
-      { rotulo: 'Spillover', valor: metrics.spilloverCount, fill: '#fbbf24' },
-      { rotulo: 'Escopo + na sprint', valor: metrics.scopeAddedDuringSprint, fill: '#f472b6' },
+      { x: 'Committed', value: metrics.committedCount, color: '#818cf8' },
+      { x: 'Entregues', value: metrics.deliveredCount, color: '#34d399' },
+      { x: 'Spillover', value: metrics.spilloverCount, color: '#fbbf24' },
+      { x: 'Escopo +', value: metrics.scopeAddedDuringSprint, color: '#f472b6' },
     ],
     [
       metrics.committedCount,
@@ -87,18 +110,20 @@ export function SprintVisualizations({ metrics }: Props) {
     ],
   )
 
-  const tempoData = useMemo(() => {
+  const tempoData: D3ColumnDatum[] = useMemo(() => {
     const lead = metrics.leadTimeDaysAvg
     const cycle = metrics.cycleTimeDaysAvg
-    const rows: { metrica: string; dias: number }[] = []
+    const rows: D3ColumnDatum[] = []
     if (lead !== null) {
-      rows.push({ metrica: 'Lead time (d)', dias: Number(lead.toFixed(2)) })
+      rows.push({ x: 'Lead (d)', value: Number(lead.toFixed(2)), color: '#a78bfa' })
     }
     if (cycle !== null) {
-      rows.push({ metrica: 'Cycle time (d)', dias: Number(cycle.toFixed(2)) })
+      rows.push({ x: 'Cycle (d)', value: Number(cycle.toFixed(2)), color: '#a78bfa' })
     }
     return rows
   }, [metrics.leadTimeDaysAvg, metrics.cycleTimeDaysAvg])
+
+  const h = Math.max(280, byPerson.length * 36)
 
   return (
     <div className="space-y-8">
@@ -110,30 +135,12 @@ export function SprintVisualizations({ metrics }: Props) {
           {byPerson.length === 0 ? (
             <EmptyChart />
           ) : (
-            <ResponsiveContainer width="100%" height={Math.max(280, byPerson.length * 36)}>
-              <BarChart
-                data={byPerson}
-                layout="vertical"
-                margin={{ top: 8, right: 16, left: 8, bottom: 8 }}
-              >
-                <CartesianGrid stroke={CHART_GRID} horizontal={false} />
-                <XAxis type="number" stroke={CHART_AXIS} fontSize={11} tickLine={false} />
-                <YAxis
-                  type="category"
-                  dataKey="nome"
-                  width={108}
-                  stroke={CHART_AXIS}
-                  fontSize={11}
-                  tickLine={false}
-                />
-                <Tooltip content={<TooltipPts />} cursor={{ fill: 'rgba(99, 102, 241, 0.08)' }} />
-                <Bar dataKey="pontos" name="Story points" radius={[0, 6, 6, 0]} maxBarSize={28}>
-                  {byPerson.map((_, i) => (
-                    <Cell key={i} fill={PALETTE[i % PALETTE.length]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            <D3HorizontalBarChart
+              data={ptsRows}
+              height={h}
+              xInteger
+              hoverTint="rgba(99, 102, 241, 0.08)"
+            />
           )}
         </ChartCard>
 
@@ -144,25 +151,12 @@ export function SprintVisualizations({ metrics }: Props) {
           {byPerson.length === 0 ? (
             <EmptyChart />
           ) : (
-            <ResponsiveContainer width="100%" height={Math.max(280, byPerson.length * 36)}>
-              <BarChart
-                data={byPerson}
-                layout="vertical"
-                margin={{ top: 8, right: 16, left: 8, bottom: 8 }}
-              >
-                <CartesianGrid stroke={CHART_GRID} horizontal={false} />
-                <XAxis type="number" stroke={CHART_AXIS} fontSize={11} allowDecimals={false} />
-                <YAxis
-                  type="category"
-                  dataKey="nome"
-                  width={108}
-                  stroke={CHART_AXIS}
-                  fontSize={11}
-                />
-                <Tooltip content={<TooltipIssues />} cursor={{ fill: 'rgba(6, 182, 212, 0.08)' }} />
-                <Bar dataKey="issues" name="Issues" fill="#06b6d4" radius={[0, 6, 6, 0]} maxBarSize={28} />
-              </BarChart>
-            </ResponsiveContainer>
+            <D3HorizontalBarChart
+              data={issuesRows}
+              height={h}
+              xInteger
+              hoverTint="rgba(6, 182, 212, 0.08)"
+            />
           )}
         </ChartCard>
       </div>
@@ -175,33 +169,8 @@ export function SprintVisualizations({ metrics }: Props) {
           {donutData.length === 0 ? (
             <EmptyChart />
           ) : (
-            <div className="flex min-h-[300px] flex-col items-center justify-center sm:flex-row">
-              <ResponsiveContainer width="100%" height={280}>
-                <PieChart>
-                  <Pie
-                    data={donutData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={68}
-                    outerRadius={100}
-                    paddingAngle={2}
-                    dataKey="value"
-                    nameKey="name"
-                    stroke="none"
-                  >
-                    {donutData.map((_, i) => (
-                      <Cell key={i} fill={PALETTE[i % PALETTE.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<TooltipDonut />} />
-                  <Legend
-                    verticalAlign="middle"
-                    align="right"
-                    layout="vertical"
-                    wrapperStyle={{ fontSize: 12, paddingLeft: 8 }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
+            <div className="flex min-h-[300px] min-w-0 flex-col items-stretch justify-center sm:flex-row">
+              <D3DonutChart data={donutData} height={280} />
             </div>
           )}
         </ChartCard>
@@ -210,26 +179,7 @@ export function SprintVisualizations({ metrics }: Props) {
           title="Comparativo de fluxo"
           subtitle="Contagens para leitura gerencial (podem sobrepor-se conceitualmente)"
         >
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={comparisonBars} margin={{ top: 16, right: 16, left: 8, bottom: 8 }}>
-              <CartesianGrid stroke={CHART_GRID} vertical={false} />
-              <XAxis dataKey="rotulo" stroke={CHART_AXIS} fontSize={11} tickLine={false} />
-              <YAxis stroke={CHART_AXIS} fontSize={11} allowDecimals={false} />
-              <Tooltip
-                formatter={(v) => [Number(v ?? 0), 'Quantidade']}
-                contentStyle={{
-                  borderRadius: 8,
-                  border: '1px solid rgb(226 232 240)',
-                  fontSize: 12,
-                }}
-              />
-              <Bar dataKey="valor" radius={[6, 6, 0, 0]} maxBarSize={56}>
-                {comparisonBars.map((entry) => (
-                  <Cell key={entry.rotulo} fill={entry.fill} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+          <D3ColumnChart data={comparisonBars} height={300} />
         </ChartCard>
       </div>
 
@@ -238,18 +188,12 @@ export function SprintVisualizations({ metrics }: Props) {
           title="Tempo médio (dias)"
           subtitle={tempoSubtitle(metrics)}
         >
-          <ResponsiveContainer width="100%" height={260}>
-            <BarChart data={tempoData} margin={{ top: 16, right: 16, left: 8, bottom: 8 }}>
-              <CartesianGrid stroke={CHART_GRID} vertical={false} />
-              <XAxis dataKey="metrica" stroke={CHART_AXIS} fontSize={12} />
-              <YAxis stroke={CHART_AXIS} fontSize={11} />
-              <Tooltip
-                formatter={(v) => [`${Number(v ?? 0)} dias`, '']}
-                contentStyle={{ borderRadius: 8, fontSize: 12 }}
-              />
-              <Bar dataKey="dias" fill="#a78bfa" radius={[6, 6, 0, 0]} maxBarSize={72} name="Dias" />
-            </BarChart>
-          </ResponsiveContainer>
+          <D3ColumnChart
+            data={tempoData}
+            height={260}
+            yLabel={(n) => `${n} dias`}
+            maxBarWidth={72}
+          />
         </ChartCard>
       ) : null}
     </div>
@@ -301,57 +245,4 @@ function truncateLabel(s: string, max: number) {
     return s
   }
   return `${s.slice(0, max - 1)}…`
-}
-
-function TooltipPts({ active, payload }: { active?: boolean; payload?: Array<{ payload: { nomeCompleto: string; pontos: number } }> }) {
-  if (!active || !payload?.length) {
-    return null
-  }
-  const p = payload[0].payload
-  return (
-    <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs shadow-lg dark:border-slate-600 dark:bg-slate-800">
-      <p className="font-medium text-slate-900 dark:text-slate-100">{p.nomeCompleto}</p>
-      <p className="text-slate-600 dark:text-slate-300">{p.pontos} story points</p>
-    </div>
-  )
-}
-
-function TooltipIssues({
-  active,
-  payload,
-}: {
-  active?: boolean
-  payload?: Array<{ payload: { nomeCompleto: string; issues: number } }>
-}) {
-  if (!active || !payload?.length) {
-    return null
-  }
-  const p = payload[0].payload
-  return (
-    <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs shadow-lg dark:border-slate-600 dark:bg-slate-800">
-      <p className="font-medium text-slate-900 dark:text-slate-100">{p.nomeCompleto}</p>
-      <p className="text-slate-600 dark:text-slate-300">{p.issues} issues entregues</p>
-    </div>
-  )
-}
-
-function TooltipDonut({
-  active,
-  payload,
-}: {
-  active?: boolean
-  payload?: Array<{ name: string; value: number; payload: { full?: string } }>
-}) {
-  if (!active || !payload?.length) {
-    return null
-  }
-  const p = payload[0]
-  return (
-    <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs shadow-lg dark:border-slate-600 dark:bg-slate-800">
-      <p className="font-medium text-slate-900 dark:text-slate-100">
-        {p.payload?.full ?? p.name}
-      </p>
-      <p className="text-slate-600 dark:text-slate-300">{p.value} pts</p>
-    </div>
-  )
 }

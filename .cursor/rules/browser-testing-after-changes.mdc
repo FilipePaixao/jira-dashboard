@@ -1,0 +1,14 @@
+---
+description: Após alterar código, validar a app no Browser (MCP)
+alwaysApply: true
+---
+
+# Teste no Browser após alterações
+
+Sempre que alterares ficheiros deste projeto (UI, rotas, API usada pelo frontend, etc.), **valida a aplicação no Browser** usando o MCP **cursor-ide-browser**:
+
+1. Garante que o servidor está a correr (`npm run dev`, porta 3000 por defeito).
+2. Usa **browser_navigate** para `http://localhost:3000/` e `/dashboard` (e outras rotas tocadas).
+3. Usa **browser_snapshot** para confirmar que a página carrega sem erro visível e que os fluxos relevantes funcionam.
+
+Se o dev server não estiver ativo, inicia-o e só depois testa. Em caso de erro 500 nas páginas, considera limpar `.next` e reiniciar o dev server.

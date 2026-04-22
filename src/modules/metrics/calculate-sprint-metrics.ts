@@ -12,11 +12,15 @@ function assigneeKey(issue: JiraIssueSnapshot): string {
   return issue.assignee?.displayName ?? issue.assignee?.accountId ?? 'unassigned'
 }
 
+function totalStoryPoints(issue: JiraIssueSnapshot): number {
+  return (issue.storyPoints ?? 0) + (issue.subtaskStoryPoints ?? 0)
+}
+
 export function calculateSprintMetrics(snapshot: SprintSnapshotDocument): SprintMetricsDocument {
   const issues = snapshot.issues
   const delivered = issues.filter((i) => i.flags.delivered)
   const sumPoints = (list: JiraIssueSnapshot[]) =>
-    list.reduce((acc, i) => acc + (i.storyPoints ?? 0), 0)
+    list.reduce((acc, i) => acc + totalStoryPoints(i), 0)
 
   const leadSamples: number[] = []
   const cycleSamples: number[] = []
@@ -46,7 +50,7 @@ export function calculateSprintMetrics(snapshot: SprintSnapshotDocument): Sprint
       byAssignee[key] = { storyPoints: 0, issues: 0 }
     }
     byAssignee[key].issues += 1
-    byAssignee[key].storyPoints += i.storyPoints ?? 0
+    byAssignee[key].storyPoints += totalStoryPoints(i)
   }
 
   return {

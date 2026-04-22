@@ -5,6 +5,7 @@ import { extractWorkStartedAtFromChangelog } from './work-started-from-changelog
 export type MapIssueContext = {
   storyPointsFieldId?: string
   sprintStartIso?: string
+  subtaskStoryPoints?: number
 }
 
 function readUser(
@@ -130,6 +131,7 @@ export function mapJiraIssueToSnapshot(
     workStartedAt,
     resolvedAt,
     storyPoints: readStoryPoints(fields, ctx.storyPointsFieldId),
+    subtaskStoryPoints: ctx.subtaskStoryPoints ?? 0,
     labels,
     components,
     epicKey,

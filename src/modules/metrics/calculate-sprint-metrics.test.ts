@@ -38,6 +38,7 @@ describe('calculateSprintMetrics', () => {
           changelogSprint: [],
           changelogAssignee: [],
           storyPoints: 3,
+          subtaskStoryPoints: 2,
           assignee: { displayName: 'Ana' },
           workStartedAt: null,
           flags: {
@@ -70,11 +71,11 @@ describe('calculateSprintMetrics', () => {
         },
       ]),
     )
-    expect(m.storyPointsDelivered).toBe(3)
+    expect(m.storyPointsDelivered).toBe(5)
     expect(m.deliveredCount).toBe(1)
     expect(m.scopeAddedDuringSprint).toBe(1)
     expect(m.spilloverCount).toBe(1)
-    expect(m.byAssignee.Ana?.storyPoints).toBe(3)
+    expect(m.byAssignee.Ana?.storyPoints).toBe(5)
     expect(m.leadTimeDaysAvg).toBeGreaterThan(30)
     expect(m.cycleTimeDaysAvg).toBeNull()
     expect(m.leadTimeSampleCount).toBe(1)

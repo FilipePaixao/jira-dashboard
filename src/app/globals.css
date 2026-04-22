@@ -1,1 +1,19 @@
 @import 'tailwindcss';
+
+@theme {
+  --color-sauvvi: #ee2e24;
+  --color-surface-light: #f2f2f7;
+  --color-secondary-light: #e5e5ea;
+  --color-secondary-dark: #333333;
+  --font-family-sans: var(--font-sans-app), ui-sans-serif, system-ui, sans-serif;
+  --font-family-brand: var(--font-brand), ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer utilities {
+  .mesh-page-bg {
+    background-image:
+      radial-gradient(at 40% 12%, rgba(238, 46, 36, 0.08) 0px, transparent 52%),
+      radial-gradient(at 92% 8%, rgba(180, 90, 90, 0.05) 0px, transparent 48%),
+      radial-gradient(at 0% 55%, rgba(238, 46, 36, 0.05) 0px, transparent 55%);
+  }
+}

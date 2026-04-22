@@ -35,6 +35,7 @@ describe('mapJiraIssueToSnapshot', () => {
     })
     expect(snap.issueKey).toBe('DEMO-1')
     expect(snap.storyPoints).toBe(5)
+    expect(snap.subtaskStoryPoints).toBe(0)
     expect(snap.flags.delivered).toBe(true)
     expect(snap.flags.spillover).toBe(false)
     expect(snap.workStartedAt).toBe('2026-01-01T11:00:00.000Z')

@@ -11,16 +11,17 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "d3": "^7.9.0",
     "mongodb": "^7.2.0",
     "next": "^15.5.15",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
-    "recharts": "^3.8.1",
     "tailwindcss": "^4.2.3"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.5",
     "@tailwindcss/postcss": "^4.2.3",
+    "@types/d3": "^7.4.3",
     "@types/node": "^24.12.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
