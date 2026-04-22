@@ -7,6 +7,14 @@ describe('mapJiraIssueToSnapshot', () => {
     const node: JiraIssueApiNode = {
       id: '100',
       key: 'DEMO-1',
+      changelog: {
+        histories: [
+          {
+            created: '2026-01-01T11:00:00.000Z',
+            items: [{ field: 'status', fromString: 'To Do', toString: 'Done' }],
+          },
+        ],
+      },
       fields: {
         summary: 'Item',
         status: { name: 'Done', statusCategory: { key: 'done' } },
@@ -29,5 +37,6 @@ describe('mapJiraIssueToSnapshot', () => {
     expect(snap.storyPoints).toBe(5)
     expect(snap.flags.delivered).toBe(true)
     expect(snap.flags.spillover).toBe(false)
+    expect(snap.workStartedAt).toBe('2026-01-01T11:00:00.000Z')
   })
 })

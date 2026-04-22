@@ -1,5 +1,6 @@
 import type { JiraIssueSnapshot } from './types'
 import type { JiraIssueApiNode } from './jira-agile-types'
+import { extractWorkStartedAtFromChangelog } from './work-started-from-changelog'
 
 export type MapIssueContext = {
   storyPointsFieldId?: string
@@ -80,6 +81,7 @@ export function mapJiraIssueToSnapshot(
   const createdAt = typeof fields.created === 'string' ? fields.created : new Date(0).toISOString()
   const updatedAt = typeof fields.updated === 'string' ? fields.updated : createdAt
   const resolvedAt = typeof fields.resolutiondate === 'string' ? fields.resolutiondate : null
+  const workStartedAt = extractWorkStartedAtFromChangelog(node.changelog)
 
   const labels = Array.isArray(fields.labels)
     ? (fields.labels as unknown[]).filter((x): x is string => typeof x === 'string')
@@ -125,6 +127,7 @@ export function mapJiraIssueToSnapshot(
     status: statusName,
     createdAt,
     updatedAt,
+    workStartedAt,
     resolvedAt,
     storyPoints: readStoryPoints(fields, ctx.storyPointsFieldId),
     labels,

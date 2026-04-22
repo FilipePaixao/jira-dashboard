@@ -390,3 +390,5 @@ Comandos de validação: `npm run build`, `npm run test`, `npm run lint`.
 - [x] **06 — Métricas**: cálculos (velocidade, lead/cycle time, throughput, spillover, etc.).
 - [x] **07 — API do dashboard**: leitura consolidada a partir do MongoDB.
 - [x] **08 — Dashboard UI**: página gerencial responsiva consumindo apenas a API interna.
+
+**Métricas de tempo (ledger 009):** lead time = criação → resolução; cycle time = 1.ª mudança de `status` no changelog → resolução (requer `expand=changelog` na extração). Comandos de validação: `npm run build`, `npm run test`, `npm run lint`.

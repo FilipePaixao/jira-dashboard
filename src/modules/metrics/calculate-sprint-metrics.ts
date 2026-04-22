@@ -21,9 +21,18 @@ export function calculateSprintMetrics(snapshot: SprintSnapshotDocument): Sprint
   const leadSamples: number[] = []
   const cycleSamples: number[] = []
   for (const i of delivered) {
-    if (i.resolvedAt) {
-      leadSamples.push(daysBetween(i.createdAt, i.resolvedAt))
-      cycleSamples.push(daysBetween(i.createdAt, i.resolvedAt))
+    if (!i.resolvedAt) {
+      continue
+    }
+    leadSamples.push(daysBetween(i.createdAt, i.resolvedAt))
+
+    const start = i.workStartedAt?.trim()
+    if (start) {
+      const ws = new Date(start).getTime()
+      const res = new Date(i.resolvedAt).getTime()
+      if (Number.isFinite(ws) && Number.isFinite(res) && ws <= res) {
+        cycleSamples.push((res - ws) / 86_400_000)
+      }
     }
   }
 
@@ -49,6 +58,8 @@ export function calculateSprintMetrics(snapshot: SprintSnapshotDocument): Sprint
     issuesDelivered: delivered.length,
     leadTimeDaysAvg: avg(leadSamples),
     cycleTimeDaysAvg: avg(cycleSamples),
+    leadTimeSampleCount: leadSamples.length,
+    cycleTimeSampleCount: cycleSamples.length,
     throughput: delivered.length,
     committedCount: issues.filter((i) => i.flags.committed).length,
     deliveredCount: delivered.length,

@@ -22,6 +22,8 @@ type Metrics = {
   issuesDelivered: number
   leadTimeDaysAvg: number | null
   cycleTimeDaysAvg: number | null
+  leadTimeSampleCount?: number
+  cycleTimeSampleCount?: number
   throughput: number
   committedCount: number
   deliveredCount: number
@@ -234,7 +236,7 @@ export function SprintVisualizations({ metrics }: Props) {
       {tempoData.length > 0 ? (
         <ChartCard
           title="Tempo médio (dias)"
-          subtitle="Lead time e cycle time médios nas entregas (proxy created→resolvido)"
+          subtitle={tempoSubtitle(metrics)}
         >
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={tempoData} margin={{ top: 16, right: 16, left: 8, bottom: 8 }}>
@@ -280,6 +282,18 @@ function EmptyChart() {
       Sem dados para exibir o gráfico.
     </div>
   )
+}
+
+function tempoSubtitle(m: Metrics): string {
+  const leadN = m.leadTimeSampleCount
+  const cycleN = m.cycleTimeSampleCount
+  const parts = [
+    'Lead: média da criação até a resolução',
+    leadN !== undefined ? `(n=${leadN})` : '',
+    '· Cycle: média da 1.ª mudança de status (changelog) até a resolução',
+    cycleN !== undefined ? `(n=${cycleN})` : '',
+  ]
+  return parts.filter(Boolean).join(' ')
 }
 
 function truncateLabel(s: string, max: number) {

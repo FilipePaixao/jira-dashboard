@@ -32,6 +32,8 @@ export type JiraIssueSnapshot = {
   status: string
   createdAt: string
   updatedAt: string
+  /** Primeira mudança de status no changelog (Jira expand=changelog); usado no cycle time. */
+  workStartedAt?: string | null
   resolvedAt?: string | null
   storyPoints?: number | null
   labels: string[]

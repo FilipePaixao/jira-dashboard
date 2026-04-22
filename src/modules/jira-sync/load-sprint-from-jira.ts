@@ -71,6 +71,7 @@ export async function loadSprintFromJira(input: {
       startAt: String(startAt),
       maxResults: String(maxResults),
       fields,
+      expand: 'changelog',
     })
     const path = `/rest/agile/1.0/sprint/${encodeURIComponent(sprintId)}/issue?${qs.toString()}`
     const pageRes = await client.jiraFetch(path)

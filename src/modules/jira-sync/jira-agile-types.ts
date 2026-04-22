@@ -22,4 +22,6 @@ export type JiraIssueApiNode = {
   id: string
   key: string
   fields: Record<string, unknown>
+  /** Presente quando a requisição inclui expand=changelog */
+  changelog?: unknown
 }

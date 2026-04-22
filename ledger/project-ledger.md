@@ -9,10 +9,11 @@
 | 2026-04-21 | 05    | Concluída | Incremento 06 — métricas            |
 | 2026-04-21 | 06    | Concluída | Incremento 07 — API dashboard      |
 | 2026-04-21 | 07–08 | Concluída | Evolução: extração Jira completa   |
+| 2026-04-21 | 09    | Concluída | Refinos de métricas de tempo       |
 
 ## Pendências atuais
 
-- Integração Jira end-to-end (issues no snapshot) e ajustes finos de métricas com dados reais.
+- Ajustar parsing de “início de trabalho” se o workflow Jira usar automações que distorcem a 1.ª mudança de status.
 
 ## Riscos
 

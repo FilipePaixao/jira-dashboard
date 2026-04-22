@@ -39,6 +39,7 @@ describe('calculateSprintMetrics', () => {
           changelogAssignee: [],
           storyPoints: 3,
           assignee: { displayName: 'Ana' },
+          workStartedAt: null,
           flags: {
             committed: true,
             delivered: true,
@@ -75,5 +76,42 @@ describe('calculateSprintMetrics', () => {
     expect(m.spilloverCount).toBe(1)
     expect(m.byAssignee.Ana?.storyPoints).toBe(3)
     expect(m.leadTimeDaysAvg).toBeGreaterThan(30)
+    expect(m.cycleTimeDaysAvg).toBeNull()
+    expect(m.leadTimeSampleCount).toBe(1)
+    expect(m.cycleTimeSampleCount).toBe(0)
+  })
+
+  it('lead time (criação→resolução) difere de cycle time (início do trabalho→resolução)', () => {
+    const m = calculateSprintMetrics(
+      baseSnapshot([
+        {
+          issueId: '1',
+          issueKey: 'X-1',
+          summary: 'a',
+          issueType: 'Story',
+          status: 'Done',
+          createdAt: '2026-03-01T10:00:00.000Z',
+          updatedAt: '2026-04-01T10:00:00.000Z',
+          workStartedAt: '2026-03-28T10:00:00.000Z',
+          resolvedAt: '2026-04-01T11:00:00.000Z',
+          labels: [],
+          components: [],
+          changelogStatus: [],
+          changelogSprint: [],
+          changelogAssignee: [],
+          storyPoints: 2,
+          flags: {
+            committed: true,
+            delivered: true,
+            addedDuringSprint: false,
+            spillover: false,
+          },
+        },
+      ]),
+    )
+    expect(m.leadTimeDaysAvg).toBeCloseTo(31.04, 1)
+    expect(m.cycleTimeDaysAvg).toBeCloseTo(4.04, 1)
+    expect(m.leadTimeSampleCount).toBe(1)
+    expect(m.cycleTimeSampleCount).toBe(1)
   })
 })

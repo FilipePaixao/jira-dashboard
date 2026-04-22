@@ -17,6 +17,8 @@ type DashboardResponse = {
     issuesDelivered: number
     leadTimeDaysAvg: number | null
     cycleTimeDaysAvg: number | null
+    leadTimeSampleCount?: number
+    cycleTimeSampleCount?: number
     throughput: number
     committedCount: number
     deliveredCount: number
@@ -232,6 +234,27 @@ export default function DashboardPage() {
                 <Metric label="Spillover" value={data.metrics.spilloverCount} />
                 <Metric label="Escopo adicionado na sprint" value={data.metrics.scopeAddedDuringSprint} />
               </div>
+
+              <p className="mt-4 max-w-3xl text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                <strong className="font-medium text-slate-600 dark:text-slate-300">Lead time</strong> médio:
+                dias entre criação da issue e resolução (amostra: entregues com data de resolução
+                {data.metrics.leadTimeSampleCount !== undefined
+                  ? `, n=${data.metrics.leadTimeSampleCount}`
+                  : ''}
+                ).{' '}
+                <strong className="font-medium text-slate-600 dark:text-slate-300">Cycle time</strong> médio:
+                dias entre a{' '}
+                <strong>primeira transição de status</strong> registada no changelog do Jira e a
+                resolução
+                {data.metrics.cycleTimeSampleCount !== undefined
+                  ? ` (n=${data.metrics.cycleTimeSampleCount})`
+                  : ''}
+                . Se o cycle aparecer vazio ou com n baixo, é preciso sincronizar com changelog (
+                <code className="rounded bg-slate-100 px-1 font-mono text-[0.7rem] dark:bg-slate-800">
+                  expand=changelog
+                </code>
+                ).
+              </p>
 
               <div className="mt-8 border-t border-slate-100 pt-8 dark:border-slate-800">
                 <h3 className="mb-4 text-base font-semibold text-slate-900 dark:text-slate-100">
