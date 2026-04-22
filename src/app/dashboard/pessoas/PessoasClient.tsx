@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
+import { IndividualAssigneeCharts } from '@/components/dashboard/IndividualAssigneeCharts'
 import { D3GroupedBarChart, type D3SeriesKey } from '@/components/charts/d3/d3-grouped-bar-chart'
 import type { IndividualAnalysisResult, SprintComparisonRow } from '@/modules/metrics/individual-analysis'
 
@@ -316,26 +317,7 @@ export function PessoasClient({
                 </div>
 
                 <div className="rounded-xl border border-secondary-light/80 bg-surface-light/40 p-4 dark:border-secondary-dark dark:bg-[#252525]/50">
-                  <h4 className="text-sm font-semibold text-neutral-800 dark:text-neutral-100">
-                    Categorias deste desenvolvedor
-                  </h4>
-                  <ul className="mt-3 space-y-2 text-sm">
-                    {selectedRow.topCategories.length === 0 ? (
-                      <li className="text-neutral-500">Sem categorias no recorte.</li>
-                    ) : (
-                      selectedRow.topCategories.map((c) => (
-                        <li
-                          key={`${selectedRow.assignee}-${c.name}`}
-                          className="flex justify-between rounded-lg border border-secondary-light/60 bg-white/80 px-3 py-2 dark:border-secondary-dark dark:bg-[#1a1a1a]/80"
-                        >
-                          <span>{c.name}</span>
-                          <span className="tabular-nums text-neutral-600 dark:text-neutral-300">
-                            {c.storyPoints} pts · {c.issues} issues
-                          </span>
-                        </li>
-                      ))
-                    )}
-                  </ul>
+                  <IndividualAssigneeCharts row={selectedRow} />
                 </div>
 
                 {analysis.mode === 'sprint' && selectedSprintComparison ? (

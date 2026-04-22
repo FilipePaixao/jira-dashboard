@@ -26,6 +26,7 @@
 | 2026-04-22 | 023   | Concluída | D3: rótulos visíveis + gráficos individuais     |
 | 2026-04-22 | 024   | Concluída | D3 H-bar: nomes na coluna (sem clip) + trunc 28 |
 | 2026-04-22 | 025   | Concluída | Pessoas: URL ?sprintId + gráficos individuais |
+| 2026-04-22 | 026   | Concluída | Pessoas: gráficos D3 por desenvolvedor selecionado |
 
 ## Pendências atuais
 

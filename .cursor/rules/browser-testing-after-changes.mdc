@@ -1,8 +1,6 @@
 ---
-description: Após alterar código, validar a app no Browser (MCP)
 alwaysApply: true
 ---
-
 # Teste no Browser após alterações
 
 Sempre que alterares ficheiros deste projeto (UI, rotas, API usada pelo frontend, etc.), **valida a aplicação no Browser** usando o MCP **cursor-ide-browser**:
