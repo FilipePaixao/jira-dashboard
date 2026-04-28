@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic'
 import { useCallback, useState } from 'react'
+import { useSession } from 'next-auth/react'
 import type { SnapshotMetadataSummary } from '@/modules/metrics/snapshot-metadata-summary'
 import type { SprintMetricsDocument } from '@/modules/metrics/types'
 import type { VelocitySeriesPoint } from '@/modules/metrics/velocity-series'
@@ -59,7 +60,7 @@ const inputClass =
   'app-theme-transition w-full min-w-0 rounded-xl border border-secondary-light/90 bg-surface-light/40 px-3 py-2.5 text-sm text-neutral-900 outline-none ring-0 transition duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] placeholder:text-neutral-400 focus:border-sauvvi focus:ring-0 dark:border-secondary-dark dark:bg-[#1a1a1a]/80 dark:text-white dark:placeholder:text-neutral-500'
 
 const cardClass =
-  'app-theme-transition animate-fade-up rounded-2xl border border-secondary-light/90 bg-white/95 p-4 shadow-sm backdrop-blur-sm dark:border-secondary-dark dark:bg-[#1a1a1a]/95 sm:p-6'
+  'app-theme-transition animate-fade-up rounded-2xl border border-secondary-light/90 bg-white/95 p-4 shadow-sm backdrop-blur-sm transition-[transform,box-shadow] duration-300 hover:-translate-y-0.5 hover:shadow-md dark:border-secondary-dark dark:bg-[#1a1a1a]/95 sm:p-6'
 
 export type SprintListPagination = {
   page: number
@@ -125,6 +126,8 @@ export function DashboardClient({
   initialSprints,
   initialPagination,
 }: Props) {
+  const { data: session } = useSession()
+  const isAdmin = session?.user?.role === 'admin'
   const [velocitySeries, setVelocitySeries] = useState(initialVelocitySeries)
   const [velocityLoading, setVelocityLoading] = useState(false)
   const [sprints, setSprints] = useState(initialSprints)
@@ -147,6 +150,9 @@ export function DashboardClient({
   const [error, setError] = useState<string | null>(null)
   const [detailTab, setDetailTab] = useState<'painel' | 'guia'>('painel')
   const [explain, setExplain] = useState<{ title: string; description: string } | null>(null)
+  const [tokenPurpose, setTokenPurpose] = useState<'register' | 'login'>('register')
+  const [tokenValue, setTokenValue] = useState<string | null>(null)
+  const [tokenLoading, setTokenLoading] = useState(false)
 
   const loadVelocitySeries = useCallback(async (days: string, sprintIdFilter: string) => {
     setVelocityLoading(true)
@@ -325,10 +331,33 @@ export function DashboardClient({
     setExplain({ title, description: EXPLAINERS[title] ?? description })
   }
 
+  async function generateToken() {
+    setTokenLoading(true)
+    setError(null)
+    setTokenValue(null)
+    try {
+      const res = await fetch('/api/auth/admin-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ purpose: tokenPurpose }),
+      })
+      const json = (await res.json()) as { token?: string; error?: string }
+      if (!res.ok || !json.token) {
+        setError(json.error ?? 'Falha ao gerar token')
+        return
+      }
+      setTokenValue(json.token)
+    } catch {
+      setError('Não foi possível gerar token de autorização')
+    } finally {
+      setTokenLoading(false)
+    }
+  }
+
   return (
     <>
       <div className="space-y-8 lg:space-y-10">
-      <div className="animate-fade-up">
+      <div className="animate-fade-up rounded-2xl border border-secondary-light/70 bg-white/70 px-4 py-4 shadow-sm dark:border-secondary-dark dark:bg-[#1a1a1a]/70 sm:px-6">
         <h1 className="font-brand text-2xl font-semibold tracking-tight text-neutral-900 dark:text-white">
           Dashboard da sprint
         </h1>
@@ -338,7 +367,7 @@ export function DashboardClient({
         </p>
       </div>
 
-      <section className={`${cardClass} border-sauvvi/15 bg-gradient-to-b from-surface-light/80 to-white/95 dark:from-[#1E1E1E]/80 dark:to-[#1a1a1a]/95`}>
+      <section className={`${cardClass} border-sauvvi/20 bg-gradient-to-b from-surface-light/80 to-white/95 dark:from-[#1E1E1E]/80 dark:to-[#1a1a1a]/95`}>
         <h2 className="font-brand text-sm font-semibold uppercase tracking-wide text-sauvvi">
           Sincronizar do Jira
         </h2>
@@ -346,7 +375,7 @@ export function DashboardClient({
           A sprint alvo é a linha <strong className="font-medium text-neutral-800 dark:text-neutral-200">selecionada</strong> na
           tabela abaixo (ID Agile).
         </p>
-        <div className="mt-4 flex flex-wrap items-end gap-4">
+        <div className="mt-4 flex flex-wrap items-end gap-4 rounded-xl border border-secondary-light/70 bg-white/50 p-3 dark:border-secondary-dark dark:bg-[#121212]/40">
           <label className="flex min-w-[200px] flex-1 flex-col gap-1.5 text-sm font-medium text-neutral-700 dark:text-neutral-300">
             Nome (opcional)
             <input
@@ -373,6 +402,44 @@ export function DashboardClient({
         ) : null}
       </section>
 
+      {isAdmin ? (
+        <section className={cardClass}>
+          <h2 className="font-brand text-sm font-semibold uppercase tracking-wide text-sauvvi">
+            Tokens de autorização (admin)
+          </h2>
+          <p className="mt-2 text-xs leading-relaxed text-neutral-600 dark:text-neutral-400">
+            Gere token de 6 caracteres para login ou cadastro. O token é de uso único e será
+            invalidado após validação.
+          </p>
+          <div className="mt-4 flex flex-wrap items-end gap-3">
+            <label className="flex min-w-[200px] flex-col gap-1.5 text-sm font-medium text-neutral-700 dark:text-neutral-300">
+              Finalidade
+              <select
+                className={inputClass}
+                value={tokenPurpose}
+                onChange={(e) => setTokenPurpose(e.target.value as 'register' | 'login')}
+              >
+                <option value="register">Cadastro</option>
+                <option value="login">Login</option>
+              </select>
+            </label>
+            <button
+              type="button"
+              className={btnPrimary}
+              onClick={() => void generateToken()}
+              disabled={tokenLoading}
+            >
+              {tokenLoading ? 'Gerando…' : 'Gerar token'}
+            </button>
+          </div>
+          {tokenValue ? (
+            <p className="mt-4 inline-flex rounded-full bg-slate-100 px-3 py-1.5 font-mono text-sm font-semibold tracking-[0.2em] text-slate-900 ring-1 ring-slate-200 dark:bg-slate-900 dark:text-slate-100 dark:ring-slate-700">
+              {tokenValue}
+            </p>
+          ) : null}
+        </section>
+      ) : null}
+
       <section className={cardClass}>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
@@ -385,7 +452,7 @@ export function DashboardClient({
           </div>
         </div>
 
-        <div className="mt-6 flex flex-col gap-4 lg:flex-row lg:flex-wrap lg:items-end">
+        <div className="mt-6 flex flex-col gap-4 rounded-xl border border-secondary-light/70 bg-surface-light/30 p-3 lg:flex-row lg:flex-wrap lg:items-end dark:border-secondary-dark dark:bg-[#121212]/30">
           <label className="flex min-w-[160px] flex-col gap-1.5 text-sm font-medium text-neutral-700 dark:text-neutral-300">
             Período (últimos…)
             <select
