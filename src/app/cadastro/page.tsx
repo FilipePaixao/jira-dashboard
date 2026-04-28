@@ -13,6 +13,7 @@ export default function CadastroPage() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [authorizationToken, setAuthorizationToken] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -24,7 +25,7 @@ export default function CadastroPage() {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, email, password, authorizationToken }),
       })
       const json = (await res.json()) as { error?: string }
       if (!res.ok) {
@@ -53,10 +54,10 @@ export default function CadastroPage() {
           />
 
           <h2 className="mt-10 max-w-sm text-4xl font-semibold tracking-tight text-[#1f2233] dark:text-[#f1f3fb]">
-            Crie seu acesso para operar com seguranca no ecossistema Sauvvi.
+            Crie acesso para acompanhar entregas e métricas no dashboard Jira.
           </h2>
           <p className="mt-4 max-w-sm text-sm leading-relaxed text-[#646b7a] dark:text-[#a5adbf]">
-            Cadastro rapido para equipes credenciadas acompanharem atendimentos e indicadores em um unico painel.
+            Cadastro rápido para times monitorarem sprint, previsibilidade e eficiência de fluxo em um único painel.
           </p>
 
           <ul className="mt-8 space-y-3 text-sm text-[#3d4454] dark:text-[#c2c8d8]">
@@ -66,15 +67,15 @@ export default function CadastroPage() {
             </li>
             <li className="flex items-start gap-2">
               <span className="mt-1 h-2 w-2 rounded-full bg-sauvvi" />
-              Dados de saude com camadas de protecao.
+              Métricas de sprint com leitura executiva e operacional.
             </li>
             <li className="flex items-start gap-2">
               <span className="mt-1 h-2 w-2 rounded-full bg-sauvvi" />
-              Painel unificado para acompanhamento operacional.
+              Visão consolidada por sprint e análise individual (admin).
             </li>
             <li className="flex items-start gap-2">
               <span className="mt-1 h-2 w-2 rounded-full bg-sauvvi" />
-              Navegacao simples em tema claro e escuro.
+              Navegação simples com temas claro e escuro.
             </li>
           </ul>
         </aside>
@@ -85,7 +86,7 @@ export default function CadastroPage() {
               Criar conta
             </h1>
             <p className="mt-2 text-sm text-[#646b7a] dark:text-[#a5adbf]">
-              Cadastro padrão cria usuario com perfil nao-admin.
+              Cadastro padrão cria usuário com perfil não-admin.
             </p>
 
             <form className="mt-7 space-y-4" onSubmit={(e) => void onSubmit(e)}>
@@ -125,6 +126,20 @@ export default function CadastroPage() {
                 />
               </div>
 
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-[#2f3648] dark:text-[#dce1ef]">
+                  Token de autorização
+                </label>
+                <input
+                  className={`${inputClass} font-mono uppercase tracking-[0.12em]`}
+                  placeholder="ABC123"
+                  value={authorizationToken}
+                  onChange={(e) => setAuthorizationToken(e.target.value.toUpperCase())}
+                  required
+                  maxLength={6}
+                />
+              </div>
+
               {error ? <p className="text-sm text-amber-700">{error}</p> : null}
               <button
                 type="submit"
@@ -136,7 +151,7 @@ export default function CadastroPage() {
             </form>
 
             <p className="mt-5 text-xs text-[#767d8c] dark:text-[#8f97ab]">
-              Conexao segura. Credenciais protegidas durante toda a transmissao.
+              Conexão segura. Credenciais protegidas durante toda a transmissão.
             </p>
 
             <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-300">
