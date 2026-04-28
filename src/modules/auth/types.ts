@@ -1,4 +1,5 @@
 export type UserRole = 'admin' | 'user'
+export type AuthorizationTokenPurpose = 'register' | 'login'
 
 export type UserDocument = {
   email: string
@@ -16,4 +17,13 @@ export type PublicUser = {
   name: string
   role: UserRole
   active: boolean
+}
+
+export type AuthorizationTokenDocument = {
+  code: string
+  purpose: AuthorizationTokenPurpose
+  createdBy: string
+  active: boolean
+  createdAt: string
+  usedAt?: string
 }

@@ -4,6 +4,9 @@ import { authenticateByCredentials, registerUser } from './service'
 vi.mock('./repository', () => ({
   findUserByEmail: vi.fn(),
   createUser: vi.fn(),
+  findActiveAuthorizationToken: vi.fn(),
+  deactivateAuthorizationToken: vi.fn(),
+  createAuthorizationToken: vi.fn(),
 }))
 
 const repo = await import('./repository')
@@ -15,6 +18,14 @@ describe('auth service', () => {
 
   it('registerUser valida campos e cria usuário comum', async () => {
     vi.mocked(repo.findUserByEmail).mockResolvedValue(null)
+    vi.mocked(repo.findActiveAuthorizationToken).mockResolvedValue({
+      code: 'ABC123',
+      purpose: 'register',
+      createdBy: 'admin@example.com',
+      active: true,
+      createdAt: '2026-01-01T00:00:00.000Z',
+    })
+    vi.mocked(repo.deactivateAuthorizationToken).mockResolvedValue()
     vi.mocked(repo.createUser).mockImplementation(async (input) => ({
       email: input.email,
       name: input.name,
@@ -29,6 +40,7 @@ describe('auth service', () => {
       email: 'USER@EXAMPLE.COM',
       name: 'User',
       password: '12345678',
+      authorizationToken: 'ABC123',
     })
 
     expect(out.role).toBe('user')

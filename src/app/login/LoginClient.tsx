@@ -48,28 +48,28 @@ export function LoginClient({ callbackUrl }: { callbackUrl: string }) {
           />
 
           <h2 className="mt-10 max-w-sm text-4xl font-semibold tracking-tight text-[#1f2233] dark:text-[#f1f3fb]">
-            Tecnologia em saude para quem atende com a Sauvvi.
+            Visibilidade de sprint para decisões mais rápidas no Jira.
           </h2>
           <p className="mt-4 max-w-sm text-sm leading-relaxed text-[#646b7a] dark:text-[#a5adbf]">
-            Gestao segura de agenda, validacoes e visao do programa em um painel simples para operacao diaria.
+            Acompanhe entrega, fluxo, previsibilidade e gargalos em um painel único para gestão de engenharia.
           </p>
 
           <ul className="mt-8 space-y-3 text-sm text-[#3d4454] dark:text-[#c2c8d8]">
             <li className="flex items-start gap-2">
               <span className="mt-1 h-2 w-2 rounded-full bg-sauvvi" />
-              Agenda e horarios dos atendimentos da rede.
+              Lead time, cycle time e throughput por sprint.
             </li>
             <li className="flex items-start gap-2">
               <span className="mt-1 h-2 w-2 rounded-full bg-sauvvi" />
-              Acompanhamento de sessoes de cuidado.
+              Confiabilidade de planejamento: committed vs entregue.
             </li>
             <li className="flex items-start gap-2">
               <span className="mt-1 h-2 w-2 rounded-full bg-sauvvi" />
-              Painel exclusivo para parceiros credenciados.
+              Leitura por pessoa para identificar gargalos de fluxo.
             </li>
             <li className="flex items-start gap-2">
               <span className="mt-1 h-2 w-2 rounded-full bg-sauvvi" />
-              Dados protegidos com criptografia.
+              Sincronização manual da sprint direto pela API interna.
             </li>
           </ul>
 
@@ -84,7 +84,7 @@ export function LoginClient({ callbackUrl }: { callbackUrl: string }) {
               Acesso ao painel
             </h1>
             <p className="mt-2 text-sm text-[#646b7a] dark:text-[#a5adbf]">
-              Use e-mail e senha da sua conta credenciada.
+              Use seu e-mail e senha para acessar o dashboard de métricas Jira.
             </p>
 
             <form className="mt-7 space-y-4" onSubmit={(e) => void onSubmit(e)}>
@@ -124,7 +124,7 @@ export function LoginClient({ callbackUrl }: { callbackUrl: string }) {
             </form>
 
             <p className="mt-5 text-xs text-[#767d8c] dark:text-[#8f97ab]">
-              Conexao segura. Dados de saude protegidos durante a transmissao.
+              Conexão segura para acesso aos dados analíticos de sprint.
             </p>
 
             <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-300">

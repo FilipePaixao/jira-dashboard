@@ -281,8 +281,11 @@ function ChartCard({
 
 function EmptyChart() {
   return (
-    <div className="flex h-[240px] items-center justify-center text-sm text-slate-500">
-      Sem dados para exibir o gráfico.
+    <div className="flex h-[240px] flex-col items-center justify-center gap-1 text-sm text-slate-500">
+      <span>Sem dados para exibir o gráfico.</span>
+      <span className="text-xs text-slate-400 dark:text-slate-500">
+        Sincronize uma sprint com entregas para liberar esta visualização.
+      </span>
     </div>
   )
 }
