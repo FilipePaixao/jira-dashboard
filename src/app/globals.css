@@ -1,4 +1,6 @@
 @import 'tailwindcss';
+@config '../../tailwind.config.ts';
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
   --color-sauvvi: #ee2e24;
