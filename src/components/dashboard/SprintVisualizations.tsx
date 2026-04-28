@@ -4,23 +4,25 @@ import { useMemo, type ReactNode } from 'react'
 import { D3ColumnChart, type D3ColumnDatum } from '@/components/charts/d3/d3-column-chart'
 import { D3DonutChart, type D3DonutSlice } from '@/components/charts/d3/d3-donut-chart'
 import { D3HorizontalBarChart, type D3HBarRow } from '@/components/charts/d3/d3-horizontal-bars'
+import type { SprintMetricsDocument } from '@/modules/metrics/types'
 
-type Metrics = {
-  velocityStoryPoints: number
-  velocityIssues: number
-  storyPointsDelivered: number
-  issuesDelivered: number
-  leadTimeDaysAvg: number | null
-  cycleTimeDaysAvg: number | null
-  leadTimeSampleCount?: number
-  cycleTimeSampleCount?: number
-  throughput: number
-  committedCount: number
-  deliveredCount: number
-  spilloverCount: number
-  scopeAddedDuringSprint: number
-  byAssignee: Record<string, { storyPoints: number; issues: number }>
-}
+type Metrics = Pick<
+  SprintMetricsDocument,
+  | 'velocityStoryPoints'
+  | 'velocityIssues'
+  | 'storyPointsDelivered'
+  | 'issuesDelivered'
+  | 'leadTimeDaysAvg'
+  | 'cycleTimeDaysAvg'
+  | 'leadTimeSampleCount'
+  | 'cycleTimeSampleCount'
+  | 'throughput'
+  | 'committedCount'
+  | 'deliveredCount'
+  | 'spilloverCount'
+  | 'scopeAddedDuringSprint'
+  | 'byAssignee'
+>
 
 const PALETTE = [
   '#6366f1',
@@ -34,9 +36,10 @@ const PALETTE = [
 
 type Props = {
   metrics: Metrics
+  onExplainRequest?: (title: string, description: string) => void
 }
 
-export function SprintVisualizations({ metrics }: Props) {
+export function SprintVisualizations({ metrics, onExplainRequest }: Props) {
   const byPerson = useMemo(() => {
     return Object.entries(metrics.byAssignee)
       .map(([name, v]) => ({
@@ -126,11 +129,20 @@ export function SprintVisualizations({ metrics }: Props) {
   const h = Math.max(280, byPerson.length * 36)
 
   return (
-    <div className="space-y-8">
+    <div className="animate-fade-up space-y-8">
       <div className="grid gap-6 lg:grid-cols-2">
         <ChartCard
           title="Pontos por pessoa"
           subtitle="Comparativo de story points nas entregas atribuídas"
+          onExplain={
+            onExplainRequest
+              ? () =>
+                  onExplainRequest(
+                    'Pontos por pessoa',
+                    'Compara a soma de story points entregues por responsável nesta sprint.\n\nUse para entender distribuição de esforço entregue e concentração de capacidade. Não é métrica de performance individual isolada.',
+                  )
+              : undefined
+          }
         >
           {byPerson.length === 0 ? (
             <EmptyChart />
@@ -147,6 +159,15 @@ export function SprintVisualizations({ metrics }: Props) {
         <ChartCard
           title="Issues entregues por pessoa"
           subtitle="Volume de itens concluídos por responsável"
+          onExplain={
+            onExplainRequest
+              ? () =>
+                  onExplainRequest(
+                    'Issues entregues por pessoa',
+                    'Mostra quantidade de issues entregues por pessoa.\n\nAjuda a ler volume de entrega em itens, complementar ao gráfico de pontos.',
+                  )
+              : undefined
+          }
         >
           {byPerson.length === 0 ? (
             <EmptyChart />
@@ -165,6 +186,15 @@ export function SprintVisualizations({ metrics }: Props) {
         <ChartCard
           title="Distribuição de pontos"
           subtitle="Proporção dos story points entre pessoas (entregas)"
+          onExplain={
+            onExplainRequest
+              ? () =>
+                  onExplainRequest(
+                    'Distribuição de pontos',
+                    'Mostra participação relativa de cada pessoa no total de pontos entregues.\n\nÚtil para visualizar concentração de esforço na sprint.',
+                  )
+              : undefined
+          }
         >
           {donutData.length === 0 ? (
             <EmptyChart />
@@ -178,6 +208,15 @@ export function SprintVisualizations({ metrics }: Props) {
         <ChartCard
           title="Comparativo de fluxo"
           subtitle="Contagens para leitura gerencial (podem sobrepor-se conceitualmente)"
+          onExplain={
+            onExplainRequest
+              ? () =>
+                  onExplainRequest(
+                    'Comparativo de fluxo',
+                    'Compara committed, entregues, spillover e escopo adicionado.\n\nServe para discutir aderência ao plano e mudanças de escopo durante a sprint.',
+                  )
+              : undefined
+          }
         >
           <D3ColumnChart data={comparisonBars} height={300} />
         </ChartCard>
@@ -187,6 +226,15 @@ export function SprintVisualizations({ metrics }: Props) {
         <ChartCard
           title="Tempo médio (dias)"
           subtitle={tempoSubtitle(metrics)}
+          onExplain={
+            onExplainRequest
+              ? () =>
+                  onExplainRequest(
+                    'Tempo médio (Lead x Cycle)',
+                    'Lead time: criação até resolução.\nCycle time: primeira transição de status (changelog) até resolução.\n\nGap grande entre os dois costuma indicar espera antes de iniciar execução.',
+                  )
+              : undefined
+          }
         >
           <D3ColumnChart
             data={tempoData}
@@ -204,16 +252,27 @@ function ChartCard({
   title,
   subtitle,
   children,
+  onExplain,
 }: {
   title: string
   subtitle: string
   children: ReactNode
+  onExplain?: () => void
 }) {
   return (
-    <div className="rounded-xl border border-slate-200/90 bg-gradient-to-b from-white to-slate-50/80 p-4 shadow-sm dark:border-slate-700/80 dark:from-slate-900/90 dark:to-slate-950/50">
-      <h3 className="text-base font-semibold tracking-tight text-slate-900 dark:text-slate-100">
-        {title}
-      </h3>
+    <div className="app-theme-transition rounded-2xl border border-secondary-light/90 bg-gradient-to-b from-white to-surface-light/70 p-4 shadow-sm backdrop-blur-sm dark:border-secondary-dark dark:from-[#1a1a1a]/95 dark:to-[#121212]/80">
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="font-brand text-base font-semibold tracking-tight text-slate-900 dark:text-slate-100">{title}</h3>
+        {onExplain ? (
+          <button
+            type="button"
+            className="app-theme-transition rounded-md border border-secondary-light/80 px-2 py-1 text-xs font-semibold text-neutral-600 transition-colors duration-200 hover:text-neutral-900 dark:border-secondary-dark dark:text-neutral-300 dark:hover:text-neutral-100"
+            onClick={onExplain}
+          >
+            Saiba mais
+          </button>
+        ) : null}
+      </div>
       <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{subtitle}</p>
       <div className="mt-4">{children}</div>
     </div>

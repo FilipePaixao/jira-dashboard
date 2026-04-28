@@ -1,5 +1,7 @@
 import { PessoasClient } from './PessoasClient'
+import { getServerAuthSession } from '@/auth'
 import { getIndividualAnalysis } from '@/modules/metrics/individual-analysis'
+import { redirect } from 'next/navigation'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,6 +20,14 @@ function firstString(v: string | string[] | undefined): string {
 }
 
 export default async function DashboardPessoasPage({ searchParams }: PageProps) {
+  const session = await getServerAuthSession()
+  if (!session?.user) {
+    redirect('/login')
+  }
+  if (session.user.role !== 'admin') {
+    redirect('/acesso-negado?from=%2Fdashboard%2Fpessoas')
+  }
+
   const sp = await searchParams
   const sprintId = firstString(sp.sprintId)
   const daysRaw = firstString(sp.days)

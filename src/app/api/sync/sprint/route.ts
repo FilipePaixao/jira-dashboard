@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { requireAdminSession, forbiddenJson, unauthorizedJson } from '@/modules/auth/guards'
 import { syncSprintSnapshot } from '@/modules/sprints/sync-sprint'
 
 type Body = {
@@ -8,6 +9,14 @@ type Body = {
 }
 
 export async function POST(request: Request) {
+  const gate = await requireAdminSession()
+  if (gate.kind === 'unauthenticated') {
+    return unauthorizedJson()
+  }
+  if (gate.kind === 'forbidden') {
+    return forbiddenJson('Apenas admins podem sincronizar sprint')
+  }
+
   let body: Body
   try {
     body = (await request.json()) as Body

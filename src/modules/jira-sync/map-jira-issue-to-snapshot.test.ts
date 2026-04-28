@@ -39,5 +39,7 @@ describe('mapJiraIssueToSnapshot', () => {
     expect(snap.flags.delivered).toBe(true)
     expect(snap.flags.spillover).toBe(false)
     expect(snap.workStartedAt).toBe('2026-01-01T11:00:00.000Z')
+    expect(snap.changelogStatus.length).toBe(1)
+    expect(snap.changelogStatus[0]!.to).toBe('Done')
   })
 })

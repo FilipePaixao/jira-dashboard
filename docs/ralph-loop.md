@@ -80,9 +80,11 @@ Quero que o trabalho seja estruturado no padrão **Ralph Loop**, com:
 # Regras obrigatórias do Ralph Loop
 
 ## 1. Cada loop deve ter escopo pequeno e verificável
+
 Cada loop deve atacar um objetivo específico, pequeno o suficiente para ser validado com clareza.
 
 ## 2. Cada loop deve registrar sua evolução em ledger
+
 Deve existir um arquivo de ledger versionado no repositório, atualizado a cada loop, contendo:
 
 - etapa atual
@@ -95,11 +97,13 @@ Deve existir um arquivo de ledger versionado no repositório, atualizado a cada 
 - próxima ação
 
 ## 3. Cada loop deve terminar com validação técnica explícita
+
 **Regra obrigatória e inegociável: ao final de cada loop e ao final de cada etapa, o build e os testes devem passar.**
 
 Isso deve ser tratado como critério formal de conclusão.
 
 ### Exigência obrigatória
+
 Para **cada loop** e para **cada etapa interna do loop**, deve ser garantido que:
 
 - o projeto continua compilando corretamente
@@ -109,6 +113,7 @@ Para **cada loop** e para **cada etapa interna do loop**, deve ser garantido que
 - nenhuma entrega é considerada concluída com testes falhando
 
 ### Regra de aceite
+
 Um loop **não pode ser considerado concluído** se qualquer uma das condições abaixo ocorrer:
 
 - build falhando
@@ -118,6 +123,7 @@ Um loop **não pode ser considerado concluído** se qualquer uma das condições
 - regressão detectada
 
 ### Instrução explícita
+
 Sempre que planejar ou executar um loop, deixe registrado de forma textual:
 
 - quais validações devem ser executadas
@@ -150,6 +156,7 @@ Quero um plano completo e rico em detalhes contendo:
 # Diretrizes arquiteturais
 
 ## Arquitetura base
+
 A solução deve ser um **monólito modular**, evitando acoplamento desnecessário entre:
 
 - integração com Jira
@@ -160,6 +167,7 @@ A solução deve ser um **monólito modular**, evitando acoplamento desnecessár
 - dashboard
 
 ## Stack
+
 - Next.js
 - TypeScript
 - MongoDB
@@ -167,6 +175,7 @@ A solução deve ser um **monólito modular**, evitando acoplamento desnecessár
 - Route Handlers / backend interno no Next.js
 
 ## Separação esperada
+
 Quero a arquitetura organizada em módulos e camadas, por exemplo:
 
 - `app/` para páginas e rotas
@@ -183,6 +192,7 @@ Quero a arquitetura organizada em módulos e camadas, por exemplo:
 # Requisitos funcionais
 
 ## Rota manual de sincronização
+
 Deve existir uma rota manual, por exemplo:
 
 `POST /api/sync/sprint`
@@ -198,6 +208,7 @@ Essa rota deverá:
 7. retornar resultado estruturado
 
 ## Dashboard
+
 O dashboard deve consumir apenas o backend e apresentar uma visão:
 
 - simples
@@ -276,9 +287,11 @@ O plano deve deixar claro que:
 Quero que isso fique **fortemente enfatizado** no plano:
 
 ## Regra central
+
 **Cada loop só pode ser dado como concluído se o build e os testes estiverem passando.**
 
 ## Em cada etapa do loop
+
 Para cada etapa interna, deve haver indicação de:
 
 - implementação prevista
@@ -288,6 +301,7 @@ Para cada etapa interna, deve haver indicação de:
 - evidência de que o build continua íntegro
 
 ## Ao final de cada loop
+
 Deve haver um bloco explícito com:
 
 - comandos de validação
@@ -334,6 +348,7 @@ Cada arquivo de iteração deve conter:
 - próxima ação
 
 ## Regra do ledger
+
 Nenhum loop pode ser fechado sem:
 
 - ledger principal atualizado
@@ -373,6 +388,7 @@ Quero que o plano seja escrito de modo que uma implementação real possa ser co
 E reforço novamente a exigência principal:
 
 ## Exigência inegociável
+
 **Para cada loop e para cada etapa, o build e os testes devem passar.**
 **Se build ou testes falharem, a etapa não está concluída e o loop não pode ser encerrado.**
 
@@ -382,13 +398,13 @@ E reforço novamente a exigência principal:
 
 Comandos de validação: `npm run build`, `npm run test`, `npm run lint`.
 
-- [x] **01 — Fundação Next.js**: App Router, Tailwind (PostCSS), pastas `modules/*`, `infra/mongodb`, `shared`, `GET /api/health`, testes Vitest, build verde.
-- [x] **02 — Infra MongoDB**: driver, helper de conexão, variáveis de ambiente, testes com mock ou memória.
-- [x] **03 — Cliente Jira**: tipos de domínio, cliente HTTP configurável, sem chamadas reais nos testes unitários.
-- [x] **04 — Rota de sync**: `POST /api/sync/sprint` com contrato inicial, persistência de snapshot e registro de execução.
-- [x] **05 — Modelagem e repositórios**: collections sprint/issues/métricas conforme plano.
-- [x] **06 — Métricas**: cálculos (velocidade, lead/cycle time, throughput, spillover, etc.).
-- [x] **07 — API do dashboard**: leitura consolidada a partir do MongoDB.
-- [x] **08 — Dashboard UI**: página gerencial responsiva consumindo apenas a API interna.
+- **01 — Fundação Next.js**: App Router, Tailwind (PostCSS), pastas `modules/`*, `infra/mongodb`, `shared`, `GET /api/health`, testes Vitest, build verde.
+- **02 — Infra MongoDB**: driver, helper de conexão, variáveis de ambiente, testes com mock ou memória.
+- **03 — Cliente Jira**: tipos de domínio, cliente HTTP configurável, sem chamadas reais nos testes unitários.
+- **04 — Rota de sync**: `POST /api/sync/sprint` com contrato inicial, persistência de snapshot e registro de execução.
+- **05 — Modelagem e repositórios**: collections sprint/issues/métricas conforme plano.
+- **06 — Métricas**: cálculos (velocidade, lead/cycle time, throughput, spillover, etc.).
+- **07 — API do dashboard**: leitura consolidada a partir do MongoDB.
+- **08 — Dashboard UI**: página gerencial responsiva consumindo apenas a API interna.
 
 **Métricas de tempo (ledger 009):** lead time = criação → resolução; cycle time = 1.ª mudança de `status` no changelog → resolução (requer `expand=changelog` na extração). Comandos de validação: `npm run build`, `npm run test`, `npm run lint`.

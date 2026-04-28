@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { Plus_Jakarta_Sans, Space_Grotesk } from 'next/font/google'
+import { getServerAuthSession } from '@/auth'
 import { Layout } from '@/components/Layout'
+import { SessionProviderClient } from '@/components/SessionProviderClient'
 import { ThemeInit } from '@/components/ThemeInit'
 import './globals.css'
 
@@ -22,11 +24,12 @@ export const metadata: Metadata = {
   description: 'Dashboard gerencial de sprints Jira',
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const session = await getServerAuthSession()
   return (
     <html
       lang="pt-BR"
@@ -35,7 +38,9 @@ export default function RootLayout({
     >
       <body className={`${plusJakarta.className} min-h-svh antialiased`}>
         <ThemeInit />
-        <Layout>{children}</Layout>
+        <SessionProviderClient session={session}>
+          <Layout>{children}</Layout>
+        </SessionProviderClient>
       </body>
     </html>
   )

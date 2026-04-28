@@ -12,13 +12,13 @@ const compareSeries: D3SeriesKey[] = [
 ]
 
 const inputClass =
-  'w-full min-w-0 rounded-xl border border-secondary-light/90 bg-surface-light/40 px-3 py-2.5 text-sm text-neutral-900 outline-none ring-0 transition-colors placeholder:text-neutral-400 focus:border-sauvvi focus:ring-0 dark:border-secondary-dark dark:bg-[#1a1a1a]/80 dark:text-white dark:placeholder:text-neutral-500'
+  'app-theme-transition w-full min-w-0 rounded-xl border border-secondary-light/90 bg-surface-light/40 px-3 py-2.5 text-sm text-neutral-900 outline-none ring-0 transition duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] placeholder:text-neutral-400 focus:border-sauvvi focus:ring-0 dark:border-secondary-dark dark:bg-[#1a1a1a]/80 dark:text-white dark:placeholder:text-neutral-500'
 
 const cardClass =
-  'rounded-2xl border border-secondary-light/90 bg-white/95 p-4 shadow-sm backdrop-blur-sm dark:border-secondary-dark dark:bg-[#1a1a1a]/95 sm:p-6'
+  'app-theme-transition animate-fade-up rounded-2xl border border-secondary-light/90 bg-white/95 p-4 shadow-sm backdrop-blur-sm dark:border-secondary-dark dark:bg-[#1a1a1a]/95 sm:p-6'
 
 const btnPrimary =
-  'inline-flex items-center justify-center gap-2 rounded-full bg-sauvvi px-5 py-2.5 text-sm font-semibold text-white shadow-[0_4px_14px_-2px_rgba(238,46,36,0.45)] transition-[colors,transform,box-shadow] duration-200 ease-out hover:bg-[#d42820] hover:shadow disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sauvvi active:scale-[0.99]'
+  'app-theme-transition inline-flex items-center justify-center gap-2 rounded-full bg-sauvvi px-5 py-2.5 text-sm font-semibold text-white shadow-[0_4px_14px_-2px_rgba(238,46,36,0.45),0_2px_6px_-2px_rgba(0,0,0,0.08)] transition-[colors,transform,box-shadow] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-[#d42820] hover:shadow disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sauvvi active:scale-[0.99]'
 
 type ApiResponse = {
   analysis?: IndividualAnalysisResult
@@ -147,7 +147,7 @@ export function PessoasClient({
 
   return (
     <div className="space-y-8 lg:space-y-10">
-      <div>
+      <div className="animate-fade-up">
         <h1 className="font-brand text-2xl font-semibold tracking-tight text-neutral-900 dark:text-white">
           Análise individual por desenvolvedor
         </h1>
@@ -251,7 +251,7 @@ export function PessoasClient({
           </label>
         </div>
         <div className="mt-5 grid gap-4 lg:grid-cols-3">
-          <div className="rounded-xl border border-secondary-light/80 bg-surface-light/40 p-3 dark:border-secondary-dark dark:bg-[#252525]/50">
+          <div className="app-theme-transition rounded-xl border border-secondary-light/80 bg-surface-light/40 p-3 shadow-sm dark:border-secondary-dark dark:bg-[#252525]/50">
             <ul className="max-h-[420px] space-y-2 overflow-y-auto pr-1">
               {filteredByName.map((r) => {
                 const active = r.assignee === safeSelectedAssignee
@@ -260,7 +260,7 @@ export function PessoasClient({
                     <button
                       type="button"
                       onClick={() => setSelectedAssignee(r.assignee)}
-                      className={`w-full rounded-lg px-3 py-2 text-left text-sm transition ${
+                      className={`app-theme-transition w-full rounded-lg px-3 py-2 text-left text-sm transition duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
                         active
                           ? 'bg-sauvvi/15 text-sauvvi ring-1 ring-sauvvi/30'
                           : 'bg-white/85 text-neutral-800 hover:bg-white dark:bg-[#1f1f1f] dark:text-neutral-200 dark:hover:bg-[#262626]'
@@ -285,13 +285,17 @@ export function PessoasClient({
           <div className="lg:col-span-2">
             {selectedRow ? (
               <div className="space-y-4">
-                <div className="rounded-xl border border-secondary-light/80 bg-surface-light/40 p-4 dark:border-secondary-dark dark:bg-[#252525]/50">
+                <div className="app-theme-transition rounded-xl border border-secondary-light/80 bg-surface-light/40 p-4 shadow-sm dark:border-secondary-dark dark:bg-[#252525]/50">
                   <h3 className="font-brand text-base font-semibold text-neutral-900 dark:text-white">
                     {selectedRow.assignee}
                   </h3>
                   <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                     <Metric label="Story points entregues" value={selectedRow.storyPointsDelivered} />
                     <Metric label="Issues entregues" value={selectedRow.issuesDelivered} />
+                    <Metric
+                      label="WIP médio em progresso"
+                      value={selectedRow.wipAverage == null ? '—' : selectedRow.wipAverage.toFixed(1)}
+                    />
                     <Metric
                       label="Pts por issue"
                       value={
@@ -313,15 +317,36 @@ export function PessoasClient({
                       }
                     />
                     <Metric label="Spillover / Escopo +" value={`${selectedRow.spilloverCount} / ${selectedRow.scopeAddedCount}`} />
+                    {selectedRow.storyPointsCommitted != null ? (
+                      <Metric label="SP committed (recorte)" value={selectedRow.storyPointsCommitted} />
+                    ) : null}
+                    {selectedRow.leadTimeDaysMedian != null ? (
+                      <Metric
+                        label="Lead mediana (d)"
+                        value={selectedRow.leadTimeDaysMedian.toFixed(1)}
+                      />
+                    ) : null}
+                    {selectedRow.cycleTimeDaysMedian != null ? (
+                      <Metric
+                        label="Cycle mediana (d)"
+                        value={selectedRow.cycleTimeDaysMedian.toFixed(1)}
+                      />
+                    ) : null}
+                    {selectedRow.reopenCount != null ? (
+                      <Metric
+                        label="Reopens (changelog)"
+                        value={`${selectedRow.reopenCount}${selectedRow.reopenRate != null ? ` (${(selectedRow.reopenRate * 100).toFixed(0)}%)` : ''}`}
+                      />
+                    ) : null}
                   </div>
                 </div>
 
-                <div className="rounded-xl border border-secondary-light/80 bg-surface-light/40 p-4 dark:border-secondary-dark dark:bg-[#252525]/50">
+                <div className="app-theme-transition rounded-xl border border-secondary-light/80 bg-surface-light/40 p-4 shadow-sm dark:border-secondary-dark dark:bg-[#252525]/50">
                   <IndividualAssigneeCharts row={selectedRow} />
                 </div>
 
                 {analysis.mode === 'sprint' && selectedSprintComparison ? (
-                  <div className="rounded-xl border border-secondary-light/80 bg-surface-light/40 p-4 dark:border-secondary-dark dark:bg-[#252525]/50">
+                  <div className="app-theme-transition rounded-xl border border-secondary-light/80 bg-surface-light/40 p-4 shadow-sm dark:border-secondary-dark dark:bg-[#252525]/50">
                     <h4 className="text-sm font-semibold text-neutral-800 dark:text-neutral-100">
                       Sprint atual vs sprint anterior
                     </h4>
@@ -344,6 +369,7 @@ export function PessoasClient({
                         keys={[
                           ['leadTimeDaysAvg', 'Lead (d)'],
                           ['cycleTimeDaysAvg', 'Cycle (d)'],
+                          ['wipAverage', 'WIP μ'],
                           ['spilloverCount', 'Spillover'],
                           ['scopeAddedCount', 'Escopo +'],
                         ]}
@@ -471,6 +497,7 @@ export function PessoasClient({
                 <th className="px-4 py-3 text-right">Issues</th>
                 <th className="px-4 py-3 text-right">Lead (dias)</th>
                 <th className="px-4 py-3 text-right">Cycle (dias)</th>
+                <th className="px-4 py-3 text-right">WIP médio</th>
                 <th className="px-4 py-3 text-right">Spillover</th>
                 <th className="px-4 py-3 text-right">Escopo add.</th>
                 <th className="px-4 py-3">Categorias topo</th>
@@ -479,7 +506,7 @@ export function PessoasClient({
             <tbody>
               {comparisonRows.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-8 text-center text-neutral-500">
+                  <td colSpan={9} className="px-4 py-8 text-center text-neutral-500">
                     Nenhum desenvolvedor selecionado para comparação.
                   </td>
                 </tr>
@@ -497,6 +524,9 @@ export function PessoasClient({
                     </td>
                     <td className="px-4 py-3 text-right tabular-nums">
                       {row.cycleTimeDaysAvg === null ? '—' : row.cycleTimeDaysAvg.toFixed(1)} ({row.cycleSampleCount})
+                    </td>
+                    <td className="px-4 py-3 text-right tabular-nums">
+                      {row.wipAverage == null ? '—' : row.wipAverage.toFixed(1)}
                     </td>
                     <td className="px-4 py-3 text-right tabular-nums">{row.spilloverCount}</td>
                     <td className="px-4 py-3 text-right tabular-nums">{row.scopeAddedCount}</td>
@@ -518,7 +548,7 @@ export function PessoasClient({
 
 function Metric({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-2xl border border-secondary-light/80 bg-surface-light/40 px-4 py-3 dark:border-secondary-dark dark:bg-[#252525]/50">
+    <div className="app-theme-transition rounded-2xl border border-secondary-light/80 bg-surface-light/40 px-4 py-3 shadow-sm dark:border-secondary-dark dark:bg-[#252525]/50">
       <div className="text-xs font-semibold uppercase tracking-wide text-neutral-500">{label}</div>
       <div className="mt-1 text-2xl font-semibold tabular-nums text-neutral-900 dark:text-white">{value}</div>
     </div>

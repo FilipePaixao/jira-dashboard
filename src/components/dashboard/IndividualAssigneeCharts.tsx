@@ -57,17 +57,23 @@ export function IndividualAssigneeCharts({ row }: Props) {
   }, [row.leadTimeDaysAvg, row.cycleTimeDaysAvg])
 
   const fluxoColumns: D3ColumnDatum[] = useMemo(
-    () => [
-      { x: 'Spillover', value: row.spilloverCount, color: '#fbbf24' },
-      { x: 'Escopo +', value: row.scopeAddedCount, color: '#f472b6' },
-    ],
-    [row.spilloverCount, row.scopeAddedCount],
+    () => {
+      const out: D3ColumnDatum[] = [
+        { x: 'Spillover', value: row.spilloverCount, color: '#fbbf24' },
+        { x: 'Escopo +', value: row.scopeAddedCount, color: '#f472b6' },
+      ]
+      if (row.wipAverage != null) {
+        out.push({ x: 'WIP μ', value: Number(row.wipAverage.toFixed(2)), color: '#06b6d4' })
+      }
+      return out
+    },
+    [row.scopeAddedCount, row.spilloverCount, row.wipAverage],
   )
 
   const catHeight = Math.max(200, categoryRows.length * 34 + 24)
 
   return (
-    <div className="space-y-4">
+    <div className="animate-fade-up space-y-4">
       <h4 className="text-sm font-semibold text-neutral-800 dark:text-neutral-100">
         Métricas em gráfico (recorte atual)
       </h4>
@@ -114,7 +120,7 @@ export function IndividualAssigneeCharts({ row }: Props) {
 
         <ChartCard
           title="Spillover e escopo adicionado"
-          subtitle="Contagens de issues (sinais de pressão de fluxo — interpretar em contexto)."
+          subtitle="Contagens de issues + WIP médio simultâneo (sinais de pressão de fluxo)."
         >
           <D3ColumnChart data={fluxoColumns} height={240} maxBarWidth={72} />
         </ChartCard>
@@ -133,7 +139,7 @@ function ChartCard({
   children: ReactNode
 }) {
   return (
-    <div className="rounded-xl border border-secondary-light/80 bg-surface-light/40 p-4 dark:border-secondary-dark dark:bg-[#252525]/50">
+    <div className="app-theme-transition rounded-2xl border border-secondary-light/80 bg-surface-light/40 p-4 shadow-sm dark:border-secondary-dark dark:bg-[#252525]/50">
       <h5 className="text-sm font-semibold text-neutral-800 dark:text-neutral-100">{title}</h5>
       <p className="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">{subtitle}</p>
       <div className="mt-3 min-h-[120px] min-w-0">{children}</div>

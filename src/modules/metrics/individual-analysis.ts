@@ -1,7 +1,13 @@
 import { getMongoDb } from '@/infra/mongodb/client'
+import {
+  buildStatusDwellSegments,
+  computeWipMetricsForIssues,
+  countReopenTransitions,
+} from '@/modules/metrics/build-status-dwell-segments'
 import type { JiraIssueSnapshot } from '@/modules/jira-sync/types'
 import type { SprintSnapshotDocument } from '@/modules/sprints/models'
 import { SPRINT_SNAPSHOTS_COLLECTION } from '@/modules/sprints/repository'
+import { medianOf } from '@/modules/metrics/stat-helpers'
 
 export type IndividualCategoryRow = {
   name: string
@@ -13,12 +19,23 @@ export type IndividualAssigneeRow = {
   assignee: string
   storyPointsDelivered: number
   issuesDelivered: number
+  /** Média de tarefas simultâneas em progresso no recorte da pessoa. */
+  wipAverage?: number | null
+  wipPeak?: number | null
   leadTimeDaysAvg: number | null
   cycleTimeDaysAvg: number | null
+  leadTimeDaysMedian?: number | null
+  cycleTimeDaysMedian?: number | null
   leadSampleCount: number
   cycleSampleCount: number
   spilloverCount: number
   scopeAddedCount: number
+  storyPointsCommitted?: number
+  storyPointsSpillover?: number
+  reopenCount?: number
+  reopenRate?: number | null
+  plannedDeliveredCount?: number
+  unplannedDeliveredCount?: number
   topCategories: IndividualCategoryRow[]
 }
 
@@ -60,6 +77,14 @@ type IndividualAccumulator = {
   cycleSamples: number[]
   spilloverCount: number
   scopeAddedCount: number
+  storyPointsCommitted: number
+  storyPointsSpill: number
+  reopens: number
+  plannedDelivered: number
+  unplannedDelivered: number
+  wipWeightedSum: number
+  wipWeight: number
+  wipPeak: number
   categories: Map<string, { issues: number; storyPoints: number }>
 }
 
@@ -113,18 +138,36 @@ function buildIndividualAnalysisFromSnapshots(
           cycleSamples: [] as number[],
           spilloverCount: 0,
           scopeAddedCount: 0,
+          storyPointsCommitted: 0,
+          storyPointsSpill: 0,
+          reopens: 0,
+          plannedDelivered: 0,
+          unplannedDelivered: 0,
+          wipWeightedSum: 0,
+          wipWeight: 0,
+          wipPeak: 0,
           categories: new Map(),
         }
       if (issue.flags.spillover) {
         acc.spilloverCount += 1
+        acc.storyPointsSpill += issuePoints(issue)
       }
       if (issue.flags.addedDuringSprint) {
         acc.scopeAddedCount += 1
       }
+      if (!issue.flags.addedDuringSprint) {
+        acc.storyPointsCommitted += issuePoints(issue)
+      }
+      acc.reopens += countReopenTransitions(issue.changelogStatus)
       if (issue.flags.delivered) {
         const pts = issuePoints(issue)
         acc.storyPointsDelivered += pts
         acc.issuesDelivered += 1
+        if (issue.flags.addedDuringSprint) {
+          acc.unplannedDelivered += 1
+        } else {
+          acc.plannedDelivered += 1
+        }
 
         if (issue.resolvedAt) {
           acc.leadSamples.push(daysBetween(issue.createdAt, issue.resolvedAt))
@@ -148,17 +191,58 @@ function buildIndividualAnalysisFromSnapshots(
     }
   }
 
+  // WIP individual por snapshot (média de tarefas simultâneas em progresso por pessoa).
+  for (const snapshot of snapshots) {
+    const byAssigneeIssues = new Map<string, JiraIssueSnapshot[]>()
+    for (const issue of snapshot.issues) {
+      const k = assigneeKey(issue)
+      const arr = byAssigneeIssues.get(k) ?? []
+      arr.push(issue)
+      byAssigneeIssues.set(k, arr)
+    }
+    for (const [assignee, list] of byAssigneeIssues) {
+      const acc = byAssignee.get(assignee)
+      if (!acc || list.length === 0) {
+        continue
+      }
+      const dwells = list.map((i) =>
+        buildStatusDwellSegments({
+          createdAt: i.createdAt,
+          endAt: i.resolvedAt && new Date(i.resolvedAt).getTime() < new Date(snapshot.syncedAt).getTime()
+            ? i.resolvedAt
+            : snapshot.syncedAt,
+          currentStatus: i.status,
+          statusTransitions: i.changelogStatus,
+        }),
+      )
+      const { wipAverage, wipPeak } = computeWipMetricsForIssues(dwells, list, snapshot.syncedAt)
+      acc.wipWeightedSum += wipAverage * list.length
+      acc.wipWeight += list.length
+      acc.wipPeak = Math.max(acc.wipPeak, wipPeak)
+    }
+  }
+
   const rows: IndividualAssigneeRow[] = [...byAssignee.entries()]
     .map(([assignee, acc]) => ({
       assignee,
       storyPointsDelivered: acc.storyPointsDelivered,
       issuesDelivered: acc.issuesDelivered,
+      wipAverage: acc.wipWeight > 0 ? acc.wipWeightedSum / acc.wipWeight : null,
+      wipPeak: acc.wipWeight > 0 ? acc.wipPeak : null,
       leadTimeDaysAvg: avg(acc.leadSamples),
       cycleTimeDaysAvg: avg(acc.cycleSamples),
+      leadTimeDaysMedian: medianOf(acc.leadSamples),
+      cycleTimeDaysMedian: medianOf(acc.cycleSamples),
       leadSampleCount: acc.leadSamples.length,
       cycleSampleCount: acc.cycleSamples.length,
       spilloverCount: acc.spilloverCount,
       scopeAddedCount: acc.scopeAddedCount,
+      storyPointsCommitted: acc.storyPointsCommitted,
+      storyPointsSpillover: acc.storyPointsSpill,
+      reopenCount: acc.reopens,
+      reopenRate: acc.issuesDelivered > 0 ? acc.reopens / acc.issuesDelivered : null,
+      plannedDeliveredCount: acc.plannedDelivered,
+      unplannedDeliveredCount: acc.unplannedDelivered,
       topCategories: toCategoryRows(acc.categories),
     }))
     .sort(
@@ -192,12 +276,22 @@ function emptyAssigneeMetrics(): Omit<IndividualAssigneeRow, 'assignee'> {
   return {
     storyPointsDelivered: 0,
     issuesDelivered: 0,
+    wipAverage: null,
+    wipPeak: null,
     leadTimeDaysAvg: null,
     cycleTimeDaysAvg: null,
+    leadTimeDaysMedian: null,
+    cycleTimeDaysMedian: null,
     leadSampleCount: 0,
     cycleSampleCount: 0,
     spilloverCount: 0,
     scopeAddedCount: 0,
+    storyPointsCommitted: 0,
+    storyPointsSpillover: 0,
+    reopenCount: 0,
+    reopenRate: null,
+    plannedDeliveredCount: 0,
+    unplannedDeliveredCount: 0,
     topCategories: [],
   }
 }
@@ -219,35 +313,16 @@ function buildSprintComparison(
   const previousMap = new Map(previousRows.map((r) => [r.assignee, r]))
   const allAssignees = [...new Set([...currentMap.keys(), ...previousMap.keys()])]
 
+  const rowBody = (r: IndividualAssigneeRow): Omit<IndividualAssigneeRow, 'assignee'> => {
+    const { assignee: _a, ...rest } = r
+    return rest
+  }
+
   const rows: SprintComparisonRow[] = allAssignees
     .map((assignee) => ({
       assignee,
-      current: currentMap.get(assignee)
-        ? {
-            storyPointsDelivered: currentMap.get(assignee)!.storyPointsDelivered,
-            issuesDelivered: currentMap.get(assignee)!.issuesDelivered,
-            leadTimeDaysAvg: currentMap.get(assignee)!.leadTimeDaysAvg,
-            cycleTimeDaysAvg: currentMap.get(assignee)!.cycleTimeDaysAvg,
-            leadSampleCount: currentMap.get(assignee)!.leadSampleCount,
-            cycleSampleCount: currentMap.get(assignee)!.cycleSampleCount,
-            spilloverCount: currentMap.get(assignee)!.spilloverCount,
-            scopeAddedCount: currentMap.get(assignee)!.scopeAddedCount,
-            topCategories: currentMap.get(assignee)!.topCategories,
-          }
-        : emptyAssigneeMetrics(),
-      previous: previousMap.get(assignee)
-        ? {
-            storyPointsDelivered: previousMap.get(assignee)!.storyPointsDelivered,
-            issuesDelivered: previousMap.get(assignee)!.issuesDelivered,
-            leadTimeDaysAvg: previousMap.get(assignee)!.leadTimeDaysAvg,
-            cycleTimeDaysAvg: previousMap.get(assignee)!.cycleTimeDaysAvg,
-            leadSampleCount: previousMap.get(assignee)!.leadSampleCount,
-            cycleSampleCount: previousMap.get(assignee)!.cycleSampleCount,
-            spilloverCount: previousMap.get(assignee)!.spilloverCount,
-            scopeAddedCount: previousMap.get(assignee)!.scopeAddedCount,
-            topCategories: previousMap.get(assignee)!.topCategories,
-          }
-        : emptyAssigneeMetrics(),
+      current: currentMap.get(assignee) ? rowBody(currentMap.get(assignee)!) : emptyAssigneeMetrics(),
+      previous: previousMap.get(assignee) ? rowBody(previousMap.get(assignee)!) : emptyAssigneeMetrics(),
     }))
     .sort(
       (a, b) =>

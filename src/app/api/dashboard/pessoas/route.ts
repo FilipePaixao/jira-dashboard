@@ -1,10 +1,19 @@
 import { NextResponse } from 'next/server'
+import { forbiddenJson, requireAdminSession, unauthorizedJson } from '@/modules/auth/guards'
 import { getIndividualAnalysis } from '@/modules/metrics/individual-analysis'
 
 const DISCLAIMER =
   'Leitura individual é gerencial e contextual: use para diagnóstico de fluxo, não para ranking punitivo.'
 
 export async function GET(request: Request) {
+  const gate = await requireAdminSession()
+  if (gate.kind === 'unauthenticated') {
+    return unauthorizedJson()
+  }
+  if (gate.kind === 'forbidden') {
+    return forbiddenJson('Apenas admins podem acessar análises individuais')
+  }
+
   try {
     const url = new URL(request.url)
     const sprintId = url.searchParams.get('sprintId')?.trim() || undefined

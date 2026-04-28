@@ -21,3 +21,28 @@ export async function getSprintSnapshotBySprintId(
     .collection<SprintSnapshotDocument>(SPRINT_SNAPSHOTS_COLLECTION)
     .findOne({ sprintId })
 }
+
+/**
+ * Sprint anterior no mesmo board, com `syncedAt` estritamente anterior.
+ */
+export async function findPreviousSnapshotOnSameBoard(input: {
+  boardId: string | null
+  beforeSyncedAt: string
+  currentSprintId: string
+}): Promise<SprintSnapshotDocument | null> {
+  const { boardId, beforeSyncedAt, currentSprintId } = input
+  if (!boardId) {
+    return null
+  }
+  const db = await getMongoDb()
+  return db
+    .collection<SprintSnapshotDocument>(SPRINT_SNAPSHOTS_COLLECTION)
+    .findOne(
+      {
+        boardId,
+        sprintId: { $ne: currentSprintId },
+        syncedAt: { $lt: beforeSyncedAt },
+      },
+      { sort: { syncedAt: -1 } },
+    )
+}

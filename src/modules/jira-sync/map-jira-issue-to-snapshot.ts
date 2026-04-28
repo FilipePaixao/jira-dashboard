@@ -1,5 +1,6 @@
 import type { JiraIssueSnapshot } from './types'
 import type { JiraIssueApiNode } from './jira-agile-types'
+import { extractChangelogStatusItems } from './extract-changelog-status'
 import { extractWorkStartedAtFromChangelog } from './work-started-from-changelog'
 
 export type MapIssueContext = {
@@ -135,7 +136,7 @@ export function mapJiraIssueToSnapshot(
     labels,
     components,
     epicKey,
-    changelogStatus: [],
+    changelogStatus: extractChangelogStatusItems(node.changelog),
     changelogSprint: [],
     changelogAssignee: [],
     flags: {

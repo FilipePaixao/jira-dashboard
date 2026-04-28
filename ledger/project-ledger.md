@@ -27,9 +27,13 @@
 | 2026-04-22 | 024   | Concluída | D3 H-bar: nomes na coluna (sem clip) + trunc 28 |
 | 2026-04-22 | 025   | Concluída | Pessoas: URL ?sprintId + gráficos individuais |
 | 2026-04-22 | 026   | Concluída | Pessoas: gráficos D3 por desenvolvedor selecionado |
+| 2026-04-22 | 027   | Concluída | New-metrics Loop 1: tipos + contrato; ver `iterations/027-new-metrics-loop-01-gap-and-types.md` |
+| 2026-04-22 | 028   | Concluída | New-metrics loops 2–10: cálculo, API, D3, pessoas; ver `iterations/028-new-metrics-loops-2-10-implementation.md` |
+| 2026-04-28 | 029   | Aberta (bloqueada) | Modernização UI + tema; aguardar estabilização de auth para fechar (`iterations/029-ui-modernization-theme.md`) |
 
 ## Pendências atuais
 
+- Opcional: mapear colunas Jira por projeto para afinar review/QA/blocked e `flowEfficiency` (hoje com heurísticas de nome).
 - Ajustar parsing de “início de trabalho” se o workflow Jira usar automações que distorcem a 1.ª mudança de status.
 - Opcional: filtros por board na visão consolidada, export CSV.
 

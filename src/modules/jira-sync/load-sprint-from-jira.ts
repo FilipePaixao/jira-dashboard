@@ -33,7 +33,8 @@ type JiraSearchResponse = {
   issues?: JiraSearchIssue[]
 }
 
-function buildFieldsParam(storyPointsFieldId?: string): string {
+/** Lista de `fields` para a API Agile/Search (pontos do board + cálculo de paridade Jira). */
+export function buildJiraSprintFieldsParam(storyPointsFieldId?: string): string {
   const set = new Set(DEFAULT_FIELDS)
   if (storyPointsFieldId) {
     set.add(storyPointsFieldId)
@@ -145,6 +146,137 @@ export type LoadSprintFromJiraResult = {
   sprintEndIso?: string
 }
 
+type JiraSearchJqlResponse = {
+  issues?: { key?: string; fields?: Record<string, unknown> }[]
+  total?: number
+  isLast?: boolean
+  startAt?: number
+  maxResults?: number
+}
+
+/**
+ * Issues exatamente como devolvidas por `GET /rest/agile/1.0/sprint/{id}/issue` (abordagem do board),
+ * com changelog expandido — fonte de verdade que o sync utiliza.
+ */
+export async function fetchSprintBoardIssueNodes(input: {
+  client: JiraClient
+  sprintId: string
+  fields: string
+}): Promise<{ nodes: JiraSprintIssuesPage['issues']; total: number }> {
+  const { client, sprintId, fields } = input
+  const nodes: JiraSprintIssuesPage['issues'] = []
+  let startAt = 0
+  const maxResults = 100
+  const sid = encodeURIComponent(sprintId)
+  let first = true
+  let totalFromApi = 0
+
+  for (;;) {
+    const qs = new URLSearchParams({
+      startAt: String(startAt),
+      maxResults: String(maxResults),
+      fields,
+      expand: 'changelog',
+    })
+    const path = `/rest/agile/1.0/sprint/${sid}/issue?${qs.toString()}`
+    const pageRes = await client.jiraFetch(path)
+    if (!pageRes.ok) {
+      const detail = await pageRes.text()
+      throw new Error(
+        `Falha ao listar issues da sprint ${sprintId} (${pageRes.status}). ${detail.slice(0, 500)}`,
+      )
+    }
+
+    const page = (await pageRes.json()) as JiraSprintIssuesPage
+    if (first) {
+      const t = page.total
+      totalFromApi = typeof t === 'number' && t > 0 ? t : 0
+      first = false
+    }
+    for (const node of page.issues ?? []) {
+      nodes.push(node)
+    }
+    const batch = page.issues?.length ?? 0
+    if (batch === 0) {
+      break
+    }
+    startAt += batch
+    if (totalFromApi > 0 && startAt >= totalFromApi) {
+      break
+    }
+    if (batch < maxResults) {
+      break
+    }
+  }
+  const total = totalFromApi > 0 ? totalFromApi : nodes.length
+  return { nodes, total }
+}
+
+/**
+ * Mesmos issues que a JQL (API moderna) devolve (sem expand changelog na primeira passagem
+ * usada no total; carga adicional com mesmos `fields` que o board).
+ */
+export async function fetchIssuesByJql(
+  client: JiraClient,
+  jql: string,
+  fields: string,
+): Promise<{ issues: { key: string; fields: Record<string, unknown> }[]; total: number; jql: string }> {
+  const out: { key: string; fields: Record<string, unknown> }[] = []
+  let startAt = 0
+  const maxResults = 100
+  const esc = (s: string) => s
+
+  let first = true
+  let totalFromApi: number | null = null
+  for (;;) {
+    const qs = new URLSearchParams({
+      jql: esc(jql),
+      startAt: String(startAt),
+      maxResults: String(maxResults),
+      fields,
+    })
+    const res = await client.jiraFetch(`/rest/api/3/search/jql?${qs.toString()}`)
+    if (!res.ok) {
+      const errText = await res.text()
+      throw new Error(
+        `Falha na procura JQL (HTTP ${res.status}): ${errText.slice(0, 500)}. JQL: ${jql.slice(0, 120)}`,
+      )
+    }
+    const page = (await res.json()) as JiraSearchJqlResponse
+    if (first) {
+      const t = page.total
+      totalFromApi = typeof t === 'number' && t > 0 ? t : 0
+      first = false
+    }
+    for (const row of page.issues ?? []) {
+      const k = row.key?.trim()
+      const f = row.fields
+      if (k && f && typeof f === 'object') {
+        out.push({ key: k, fields: f as Record<string, unknown> })
+      }
+    }
+    const batch = page.issues?.length ?? 0
+    if (batch === 0) {
+      break
+    }
+    startAt += batch
+    if (page.isLast === true) {
+      break
+    }
+    if (totalFromApi !== null && totalFromApi > 0 && out.length >= totalFromApi) {
+      break
+    }
+    if (batch < maxResults) {
+      break
+    }
+  }
+  const totalFinal =
+    totalFromApi !== null && totalFromApi > 0
+      ? totalFromApi
+      : out.length
+  return { issues: out, total: totalFinal, jql }
+}
+
 export async function loadSprintFromJira(input: {
   sprintId: string
   sprintName?: string
@@ -171,42 +303,9 @@ export async function loadSprintFromJira(input: {
   const sprintStartIso = meta.startDate
   const sprintEndIso = meta.endDate ?? meta.completeDate
 
-  const fields = buildFieldsParam(storyPointsFieldId)
+  const fields = buildJiraSprintFieldsParam(storyPointsFieldId)
+  const { nodes } = await fetchSprintBoardIssueNodes({ client, sprintId, fields })
   const issues: JiraIssueSnapshot[] = []
-  const nodes: JiraSprintIssuesPage['issues'] = []
-  let startAt = 0
-  let total = Number.POSITIVE_INFINITY
-  const maxResults = 100
-
-  while (startAt < total) {
-    const qs = new URLSearchParams({
-      startAt: String(startAt),
-      maxResults: String(maxResults),
-      fields,
-      expand: 'changelog',
-    })
-    const path = `/rest/agile/1.0/sprint/${encodeURIComponent(sprintId)}/issue?${qs.toString()}`
-    const pageRes = await client.jiraFetch(path)
-    if (!pageRes.ok) {
-      const detail = await pageRes.text()
-      throw new Error(
-        `Falha ao listar issues da sprint ${sprintId} (${pageRes.status}). ${detail.slice(0, 500)}`,
-      )
-    }
-
-    const page = (await pageRes.json()) as JiraSprintIssuesPage
-    total = typeof page.total === 'number' ? page.total : 0
-
-    for (const node of page.issues ?? []) {
-      nodes.push(node)
-    }
-
-    const batch = page.issues?.length ?? 0
-    if (batch === 0) {
-      break
-    }
-    startAt += batch
-  }
 
   const issueKeySet = new Set(nodes.map((node) => node.key))
   const subtaskKeysByIssue = new Map<string, string[]>()

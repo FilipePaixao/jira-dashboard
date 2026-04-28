@@ -55,6 +55,25 @@ export function buildExecutiveSummary(
     parts.push('Tempos médios não estão disponíveis (faltam datas de resolução ou amostra vazia).')
   }
 
+  const si = metrics.stabilityIndex
+  if (si != null) {
+    parts.push(
+      `Índice de estabilidade de escopo (0–1) ≈ ${si.toFixed(2)} — combina spillover e alteração de escopo; não mede desempenho individual.`,
+    )
+  }
+  const fpy = metrics.firstPassYield
+  if (fpy != null) {
+    parts.push(
+      `First pass yield (entregas sem reabertura de workflow) ≈ ${(fpy * 100).toFixed(0)} % — reaberturas dependem de regras de coluna e changelog.`,
+    )
+  }
+  const br = metrics.bugRate
+  if (br != null) {
+    parts.push(
+      `Proporção de entregas classificadas como bug/tipo similar (leitura heurística) ≈ ${(br * 100).toFixed(0)} %.`,
+    )
+  }
+
   parts.push(
     'Esta leitura é gerencial: combine com contexto de negócio e riscos antes de decisões.',
   )

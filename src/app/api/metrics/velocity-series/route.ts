@@ -1,8 +1,14 @@
 import { NextResponse } from 'next/server'
+import { requireAuthSession, unauthorizedJson } from '@/modules/auth/guards'
 import { listVelocitySeries } from '@/modules/metrics/velocity-series'
 import { parseSprintListQuery, toSprintListFilters } from '@/modules/sprints/sprint-list-query'
 
 export async function GET(request: Request) {
+  const session = await requireAuthSession()
+  if (!session) {
+    return unauthorizedJson()
+  }
+
   try {
     const url = new URL(request.url)
     const parsed = parseSprintListQuery(url.searchParams)

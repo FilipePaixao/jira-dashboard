@@ -2,18 +2,108 @@
 
 @theme {
   --color-sauvvi: #ee2e24;
+  --color-background-light: #ffffff;
+  --color-background-dark: #121212;
   --color-surface-light: #f2f2f7;
+  --color-surface-dark: #1e1e1e;
+  --color-text-light: #000000;
+  --color-text-dark: #ffffff;
   --color-secondary-light: #e5e5ea;
   --color-secondary-dark: #333333;
   --font-family-sans: var(--font-sans-app), ui-sans-serif, system-ui, sans-serif;
   --font-family-brand: var(--font-brand), ui-sans-serif, system-ui, sans-serif;
+  --ease-brand: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @layer utilities {
+  .app-theme-transition {
+    transition:
+      background-color 280ms var(--ease-brand),
+      border-color 280ms var(--ease-brand),
+      color 220ms var(--ease-brand),
+      box-shadow 280ms var(--ease-brand),
+      transform 220ms var(--ease-brand);
+  }
+
+  .animate-fade-up {
+    animation: fade-up 0.65s var(--ease-brand) both;
+  }
+
+  .animate-pop-in {
+    animation: pop-in 0.45s var(--ease-brand) both;
+  }
+
+  .animate-theme-veil {
+    animation: theme-veil 0.88s var(--ease-brand) both;
+  }
+
+  .animate-denied-lock {
+    animation: denied-lock 1.2s var(--ease-brand) infinite;
+  }
+
   .mesh-page-bg {
     background-image:
       radial-gradient(at 40% 12%, rgba(238, 46, 36, 0.08) 0px, transparent 52%),
       radial-gradient(at 92% 8%, rgba(180, 90, 90, 0.05) 0px, transparent 48%),
       radial-gradient(at 0% 55%, rgba(238, 46, 36, 0.05) 0px, transparent 55%);
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes theme-veil {
+  0% {
+    filter: brightness(1.06);
+  }
+
+  100% {
+    filter: brightness(1);
+  }
+}
+
+@keyframes denied-lock {
+  0% {
+    transform: translateX(0) scale(1);
+    opacity: 0.95;
+  }
+  18% {
+    transform: translateX(-3px) scale(1.04);
+  }
+  36% {
+    transform: translateX(3px) scale(1.04);
+  }
+  50% {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+  }
+  75% {
+    transform: scale(1.07);
+    opacity: 0.92;
+  }
+  100% {
+    transform: translateX(0) scale(1);
+    opacity: 0.95;
   }
 }

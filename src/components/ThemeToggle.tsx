@@ -28,7 +28,7 @@ export function ThemeToggle() {
     <button
       type="button"
       onClick={() => cycle()}
-      className="rounded-full border border-secondary-light/90 bg-white/90 px-3 py-1.5 text-xs font-medium text-neutral-700 shadow-sm transition-colors duration-200 hover:border-sauvvi/40 hover:text-sauvvi dark:border-[#333333] dark:bg-[#1E1E1E]/90 dark:text-neutral-200 dark:hover:border-sauvvi/50"
+      className="app-theme-transition inline-flex items-center gap-1.5 rounded-full border border-secondary-light/90 bg-white/90 px-3 py-1.5 text-xs font-medium text-neutral-700 shadow-sm transition duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:border-sauvvi/40 hover:text-sauvvi dark:border-[#333333] dark:bg-[#1E1E1E]/90 dark:text-neutral-200 dark:hover:border-sauvvi/50"
       aria-label={label}
       title={label}
     >
