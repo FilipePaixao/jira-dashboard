@@ -3,37 +3,35 @@
 import { useEffect, useState } from 'react'
 import { getStoredTheme, setStoredTheme } from './ThemeInit'
 
-type Mode = 'light' | 'dark' | 'system'
-
 export function ThemeToggle() {
-  const [mode, setMode] = useState<Mode>('system')
+  const [isDark, setIsDark] = useState(false)
 
   useEffect(() => {
     queueMicrotask(() => {
-      setMode(getStoredTheme())
+      const mode = getStoredTheme()
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+      const dark = mode === 'dark' || (mode === 'system' && prefersDark)
+      setIsDark(dark)
     })
   }, [])
 
-  function cycle() {
-    const order: Mode[] = ['system', 'light', 'dark']
-    const next = order[(order.indexOf(mode) + 1) % order.length]
-    setMode(next)
-    setStoredTheme(next)
+  function toggleTheme() {
+    const next = !isDark
+    setIsDark(next)
+    setStoredTheme(next ? 'dark' : 'light')
   }
 
-  const label =
-    mode === 'system' ? 'Tema: sistema' : mode === 'light' ? 'Tema: claro' : 'Tema: escuro'
+  const label = isDark ? 'Ativar tema claro' : 'Ativar tema escuro'
 
   return (
     <button
       type="button"
-      onClick={() => cycle()}
-      className="app-theme-transition inline-flex items-center gap-1.5 rounded-full border border-secondary-light/90 bg-white/90 px-3 py-1.5 text-xs font-medium text-neutral-700 shadow-sm transition duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:border-sauvvi/40 hover:text-sauvvi dark:border-[#333333] dark:bg-[#1E1E1E]/90 dark:text-neutral-200 dark:hover:border-sauvvi/50"
+      onClick={toggleTheme}
+      className="app-theme-transition inline-flex h-8 w-8 items-center justify-center rounded-full border border-secondary-light/90 bg-white/90 text-sm text-neutral-700 shadow-sm transition-colors hover:border-sauvvi/40 hover:text-sauvvi dark:border-[#333333] dark:bg-[#1E1E1E]/90 dark:text-neutral-200 dark:hover:border-sauvvi/50"
       aria-label={label}
       title={label}
     >
-      {mode === 'system' ? '◐' : mode === 'light' ? '☀' : '☾'}{' '}
-      <span className="hidden sm:inline">{label}</span>
+      <span aria-hidden>{isDark ? '☀' : '☾'}</span>
     </button>
   )
 }
