@@ -71,4 +71,6 @@ export default defineConfig([
   },
 ])
 ```
+
 # jira-dashboard
+
