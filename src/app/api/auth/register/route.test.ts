@@ -26,6 +26,7 @@ describe('POST /api/auth/register', () => {
         email: 'user@example.com',
         name: 'User',
         password: '12345678',
+        authorizationToken: 'ABC123',
       }),
       headers: { 'Content-Type': 'application/json' },
     })
